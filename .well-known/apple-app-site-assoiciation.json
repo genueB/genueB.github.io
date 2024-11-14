@@ -3,7 +3,7 @@
     "apps": [],
     "details": [
       {
-        "appIDs": "695CSB84W6.com.realpacking.rpapp",
+        "appIDs": "695CSB84W6.com.realpacking.kotgam",
         "paths": [
           "*"
         ],
@@ -17,7 +17,7 @@
   },
   "webcredentials": {
     "apps": [
-      "695CSB84W6.com.realpacking.rpapp"
+      "695CSB84W6.com.realpacking.kotgam"
     ]
   }
 }
