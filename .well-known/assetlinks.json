@@ -1,8 +1,8 @@
 [{
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
-    "namespace": "com.realpacking.kotgam",
-    "package_name": "com.realpacking.kotgam",
+    "namespace": "com.realpacking.rpapp",
+    "package_name": "com.realpacking.rpapp",
     "sha256_cert_fingerprints": ["46:8A:63:89:39:78:F1:2A:5D:FF:E8:87:77:B8:74:28:B4:EE:F2:FE:5C:00:32:9F:58:C8:52:59:84:E2:7F:5E"]
   }
 }]
