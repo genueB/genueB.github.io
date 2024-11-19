@@ -1,7 +1,7 @@
 [{
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
-    "namespace": "com.realpacking.kotgam",
+    "namespace": "android_app",
     "package_name": "com.realpacking.kotgam",
     "sha256_cert_fingerprints": ["12:32:10:4E:1C:2A:3E:3C:60:68:CA:55:D7:A2:F3:BA:E2:51:AA:BA:E1:AC:B4:C7:20:9A:79:51:42:39:64:BD"]
   }
