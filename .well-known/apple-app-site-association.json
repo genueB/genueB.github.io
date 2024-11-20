@@ -1,25 +1,25 @@
 {
-  "applinks": {
-    "apps": [],
-    "details": [
-      {
-        "appIDs": [
-          "695CSB84W6.com.realpacking.kotkam"
-        ],
-        "paths": [
-          "*"
-        ],
-        "components": [
-          {
-            "/": "/*"
-          }
+    "applinks": {
+        "apps": [],
+        "details": [
+            {
+                "appIDs": [
+                    "695CSB84W6.com.realpacking.kotkam"
+                ],
+                "paths": [
+                    "*"
+                ],
+                "components": [
+                    {
+                        "/": "/*"
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  },
-  "webcredentials": {
-    "apps": [
-      "695CSB84W6.com.realpacking.kotkam"
-    ]
-  }
+    },
+    "webcredentials": {
+        "apps": [
+            "695CSB84W6.com.realpacking.kotkam"
+        ]
+    }
 }
