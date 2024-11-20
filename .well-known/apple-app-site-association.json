@@ -3,7 +3,9 @@
     "apps": [],
     "details": [
       {
-        "appIDs": "695CSB84W6.com.realpacking.kotkam",
+        "appIDs": [
+          "695CSB84W6.com.realpacking.kotkam"
+        ],
         "paths": [
           "*"
         ],
