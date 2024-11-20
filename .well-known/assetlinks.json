@@ -2,7 +2,7 @@
   {
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
-      "namespace": "android_app",
+      "namespace": "android_appandroid_app",
       "package_name": "com.realpacking.kotkam",
       "sha256_cert_fingerprints":
         ["C2:05:F1:0A:BC:7A:A2:8C:FA:14:B8:9A:8C:A6:35:33:F6:44:B5:66:86:A7:8A:8C:4B:8D:B3:DC:38:D6:0F:F7"]
