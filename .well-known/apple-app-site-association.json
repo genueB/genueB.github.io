@@ -7,7 +7,7 @@
                     "695CSB84W6.com.realpacking.kotkam"
                 ],
                 "paths": [
-                    "*"
+                    "*", "/"
                 ],
                 "components": [
                     {
