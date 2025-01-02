@@ -41,6 +41,7 @@
         <button onclick="handleDeepLink()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
             앱으로 이동하기
         </button>
+        <p id="deeplink-url" style="margin-top: 10px; color: #666; word-break: break-all;"></p>
     </div>
 
     <script>
@@ -107,18 +108,22 @@
             // 현재 URL 파라미터 가져오기
             const urlParams = new URLSearchParams(window.location.search);
             const deepLinkParam = urlParams.get('deep_link');
+            const deeplinkUrlElement = document.getElementById('deeplink-url');
 
             if (isAndroid) {
                 // 안드로이드 처리
-                window.location.href = `intent://your-app-scheme/${deepLinkParam}#Intent;` +
-                    `package=your.package.name;` +
-                    `scheme=your-app-scheme;` +
-                    `S.browser_fallback_url=${encodeURIComponent('https://play.google.com/store/apps/details?id=your.package.name')};` +
+                const androidUrl = `https://kotkam.app/${deepLinkParam};` +
+                    `package=com.realpacking.kotkam;` +
+                    `scheme=https;` +
+                    `S.browser_fallback_url=${encodeURIComponent('https://play.google.com/store/apps/details?id=com.realpacking.kotkam')};` +
                     `end;`;
+                deeplinkUrlElement.textContent = `이동할 주소: ${androidUrl}`;
+                window.location.href = androidUrl;
             } else if (isIOS) {
                 // iOS 처리
                 const appUrl = `your-app-scheme://${deepLinkParam}`;
                 const appStoreUrl = 'https://apps.apple.com/app/idYOUR_APP_ID';
+                deeplinkUrlElement.textContent = `이동할 주소: ${appUrl}`;
 
                 // iOS Universal Links 또는 Custom URL Scheme 시도
                 window.location.href = appUrl;
@@ -127,6 +132,8 @@
                 setTimeout(() => {
                     window.location.href = appStoreUrl;
                 }, 2500);
+            } else {
+                deeplinkUrlElement.textContent = '지원하지 않는 기기입니다.';
             }
         }
     </script>
