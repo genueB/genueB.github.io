@@ -4,6 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <title>기기 정보</title>
+    <!-- <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID, app-argument=YOUR_DEEP_LINK">
+    <meta property="al:ios:url" content="your-app-scheme://deep-link">
+    <meta property="al:ios:app_store_id" content="YOUR_APP_STORE_ID">
+    <meta property="al:ios:app_name" content="YOUR_APP_NAME">
+    <meta property="al:android:url" content="your-app-scheme://deep-link">
+    <meta property="al:android:package" content="your.package.name">
+    <meta property="al:android:app_name" content="YOUR_APP_NAME"> -->
     <style>
         body {
             font-size: 18px;
@@ -28,6 +35,13 @@
 <body>
     <h1>기기 정보</h1>
     <div id="device-info"></div>
+
+    <!-- 딥링크 테스트 버튼 추가 -->
+    <div style="margin-top: 20px;">
+        <button onclick="handleDeepLink()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+            앱으로 이동하기
+        </button>
+    </div>
 
     <script>
         async function getDeviceInfo() {
@@ -84,6 +98,37 @@
         window.addEventListener('resize', getDeviceInfo);
         // 페이지 로드 시 기기 정보 표시
         window.onload = getDeviceInfo;
+
+        async function handleDeepLink() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            const isAndroid = userAgent.includes('android');
+            const isIOS = /iphone|ipad|ipod/.test(userAgent);
+
+            // 현재 URL 파라미터 가져오기
+            const urlParams = new URLSearchParams(window.location.search);
+            const deepLinkParam = urlParams.get('deep_link');
+
+            if (isAndroid) {
+                // 안드로이드 처리
+                window.location.href = `intent://your-app-scheme/${deepLinkParam}#Intent;` +
+                    `package=your.package.name;` +
+                    `scheme=your-app-scheme;` +
+                    `S.browser_fallback_url=${encodeURIComponent('https://play.google.com/store/apps/details?id=your.package.name')};` +
+                    `end;`;
+            } else if (isIOS) {
+                // iOS 처리
+                const appUrl = `your-app-scheme://${deepLinkParam}`;
+                const appStoreUrl = 'https://apps.apple.com/app/idYOUR_APP_ID';
+
+                // iOS Universal Links 또는 Custom URL Scheme 시도
+                window.location.href = appUrl;
+
+                // 앱이 설치되어 있지 않은 경우 App Store로 이동
+                setTimeout(() => {
+                    window.location.href = appStoreUrl;
+                }, 2500);
+            }
+        }
     </script>
 </body>
 
