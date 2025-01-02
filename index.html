@@ -80,6 +80,8 @@
                 connection: navigator.connection ? navigator.connection.effectiveType : '알 수 없음'
             };
 
+
+
             const deviceInfoDiv = document.getElementById('device-info');
             deviceInfoDiv.innerHTML = `
                 <p><strong>IP 주소:</strong> ${deviceInfo.ipAddress}</p>
@@ -121,7 +123,7 @@
                 window.location.href = androidUrl;
             } else if (isIOS) {
                 // iOS 처리
-                const appUrl = `your-app-scheme://${deepLinkParam}`;
+                const appUrl = `https://kotkam.app/${deepLinkParam}`;
                 const appStoreUrl = 'https://apps.apple.com/app/idYOUR_APP_ID';
                 deeplinkUrlElement.textContent = `이동할 주소: ${appUrl}`;
 
