@@ -41,8 +41,20 @@
                 ipAddress = '확인할 수 없음';
             }
 
+            // 위치 정보 가져오기
+            let location = '위치 정보 요청 중...';
+            try {
+                const position = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                });
+                location = `위도: ${position.coords.latitude}, 경도: ${position.coords.longitude}`;
+            } catch (error) {
+                location = '위치 정보를 가져올 수 없음 (권한이 거부되었거나 지원되지 않음)';
+            }
+
             const deviceInfo = {
                 ipAddress: ipAddress,
+                location: location,
                 userAgent: navigator.userAgent,
                 platform: navigator.platform,
                 language: navigator.language,
@@ -56,6 +68,7 @@
             const deviceInfoDiv = document.getElementById('device-info');
             deviceInfoDiv.innerHTML = `
                 <p><strong>IP 주소:</strong> ${deviceInfo.ipAddress}</p>
+                <p><strong>현재 위치:</strong> ${deviceInfo.location}</p>
                 <p><strong>사용자 에이전트:</strong> ${deviceInfo.userAgent}</p>
                 <p><strong>플랫폼:</strong> ${deviceInfo.platform}</p>
                 <p><strong>언어:</strong> ${deviceInfo.language}</p>
