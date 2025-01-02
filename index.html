@@ -1,1 +1,40 @@
-Hello World
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>기기 정보</title>
+</head>
+
+<body>
+    <h1>기기 정보</h1>
+    <div id="device-info"></div>
+
+    <script>
+        function getDeviceInfo() {
+            const deviceInfo = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                language: navigator.language,
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                screenColorDepth: window.screen.colorDepth,
+                connection: navigator.connection ? navigator.connection.effectiveType : '알 수 없음'
+            };
+
+            const deviceInfoDiv = document.getElementById('device-info');
+            deviceInfoDiv.innerHTML = `
+                <p><strong>사용자 에이전트:</strong> ${deviceInfo.userAgent}</p>
+                <p><strong>플랫폼:</strong> ${deviceInfo.platform}</p>
+                <p><strong>언어:</strong> ${deviceInfo.language}</p>
+                <p><strong>화면 해상도:</strong> ${deviceInfo.screenResolution}</p>
+                <p><strong>색상 심도:</strong> ${deviceInfo.screenColorDepth}</p>
+                <p><strong>네트워크 연결:</strong> ${deviceInfo.connection}</p>
+            `;
+        }
+
+        // 페이지 로드 시 기기 정보 표시
+        window.onload = getDeviceInfo;
+    </script>
+</body>
+
+</html>
