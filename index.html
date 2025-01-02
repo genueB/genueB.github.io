@@ -84,7 +84,7 @@
                 timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
                 timezoneOffset: new Date().getTimezoneOffset(),
                 webglVendor: this.getWebGLFingerprint(),
-                audioFingerprint: await this.getAudioFingerprint(),
+                audioFingerprint: this.getAudioFingerprint(),
             };
 
 
