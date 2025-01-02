@@ -111,7 +111,7 @@
             `;
         }
         // WebGL 핑거프린트
-        async function getWebGLFingerprint() {
+        function getWebGLFingerprint() {
             const canvas = document.createElement('canvas');
             const gl = canvas.getContext('webgl');
             if (!gl) return null;
@@ -124,7 +124,7 @@
         }
 
         // 오디오 핑거프린트
-        async function getAudioFingerprint() {
+        function getAudioFingerprint() {
             try {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
