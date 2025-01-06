@@ -1,16 +1,29 @@
 <!DOCTYPE html>
+    <html lang="en">
+   <head>
+      <style>
+         a {
+             font-size: 100px
+             }
+      </style>
+   </head>
+   <body>
+      <a href="https://app.adjust.com/abc123?deep_link=myamazingapp%3A%2F%2Fsuper%2Fexclusive%2Fpromotion">Deep Link</a>
+   </body>
+</html>
+<!-- <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="UTF-8">
     <title>기기 정보</title>
-    <!-- <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID, app-argument=YOUR_DEEP_LINK">
+    <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID, app-argument=YOUR_DEEP_LINK">
     <meta property="al:ios:url" content="your-app-scheme://deep-link">
     <meta property="al:ios:app_store_id" content="YOUR_APP_STORE_ID">
     <meta property="al:ios:app_name" content="YOUR_APP_NAME">
     <meta property="al:android:url" content="your-app-scheme://deep-link">
     <meta property="al:android:package" content="your.package.name">
-    <meta property="al:android:app_name" content="YOUR_APP_NAME"> -->
+    <meta property="al:android:app_name" content="YOUR_APP_NAME">
     <style>
         body {
             font-size: 18px;
@@ -36,7 +49,7 @@
     <h1>기기 정보</h1>
     <div id="device-info"></div>
 
-    <!-- 딥링크 테스트 버튼 추가 -->
+    // 딥링크 테스트 버튼 추가
     <div style="margin-top: 20px;">
         <button onclick="handleDeepLink()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
             앱으로 이동하기
@@ -104,7 +117,9 @@
                 <p><strong>색상 심도:</strong> ${deviceInfo.screenColorDepth}</p>
                 <p><strong>네트워크 연결:</strong> ${deviceInfo.connection}</p>
                 <p><strong>디바이스 픽셀 비율:</strong> ${deviceInfo.ratio}</p>
-                <p><strong>WebGL 제조사:</strong> ${deviceInfo.webglVendor}</p>
+                <p><strong>WebGL vendor:</strong> ${deviceInfo.webglVendor.vendor}</p>
+                <p><strong>WebGL renderer:</strong> ${deviceInfo.webglVendor.renderer}</p>
+                <p><strong>WebGL extensions:</strong> ${deviceInfo.webglVendor.extensions}</p>
                 <p><strong>타임존:</strong> ${deviceInfo.timezone}</p>
                 <p><strong>타임존 오프셋:</strong> ${deviceInfo.timezoneOffset}</p>
                 <p><strong>오디오 지문:</strong> ${deviceInfo.audioFingerprint}</p>
@@ -200,4 +215,4 @@
     </script>
 </body>
 
-</html>
+</html> -->
