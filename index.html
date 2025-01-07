@@ -99,6 +99,21 @@
                 timezoneOffset: new Date().getTimezoneOffset(),
                 webglVendor: this.getWebGLFingerprint(),
                 audioFingerprint: this.getAudioFingerprint(),
+                physicalScreenSize: `${window.screen.width}x${window.screen.height}`,
+                availableScreenSize: `${window.screen.availWidth}x${window.screen.availHeight}`,
+                logicalScreenSize: `${window.innerWidth}x${window.innerHeight}`,
+                devicePixelRatio: window.devicePixelRatio,
+                viewport: {
+                    width: document.documentElement.clientWidth,
+                    height: document.documentElement.clientHeight,
+                    visualViewport: {
+                        width: window.visualViewport?.width,
+                        height: window.visualViewport?.height,
+                        scale: window.visualViewport?.scale,
+                        offsetTop: window.visualViewport?.offsetTop,
+                        offsetLeft: window.visualViewport?.offsetLeft
+                    }
+                },
             };
 
 
@@ -124,6 +139,16 @@
                 <p><strong>타임존:</strong> ${deviceInfo.timezone}</p>
                 <p><strong>타임존 오프셋:</strong> ${deviceInfo.timezoneOffset}</p>
                 <p><strong>오디오 지문:</strong> ${deviceInfo.audioFingerprint}</p>
+                <p><strong>물리적 화면 크기:</strong> ${deviceInfo.physicalScreenSize}</p>
+                <p><strong>사용 가능한 화면 크기:</strong> ${deviceInfo.availableScreenSize}</p>
+                <p><strong>논리적 화면 크기 (뷰포트):</strong> ${deviceInfo.logicalScreenSize}</p>
+                <p><strong>Device Pixel Ratio:</strong> ${deviceInfo.devicePixelRatio}</p>
+                <p><strong>Viewport 크기:</strong> ${deviceInfo.viewport.width}x${deviceInfo.viewport.height}</p>
+                <p><strong>Visual Viewport:</strong> 
+                    width: ${deviceInfo.viewport.visualViewport.width}, 
+                    height: ${deviceInfo.viewport.visualViewport.height}, 
+                    scale: ${deviceInfo.viewport.visualViewport.scale}
+                </p>
             `;
         }
         // WebGL 핑거프린트
