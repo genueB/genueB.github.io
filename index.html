@@ -81,6 +81,8 @@
     </div>
 
     <script>
+        let initialDeviceInfo = null;
+
         async function getDeviceInfo() {
             // IP 주소 가져오기
             let ipAddress = '가져오는 중...';
@@ -163,8 +165,28 @@
                         devicePixelRatio: window.devicePixelRatio,
                         visualScale: window.visualViewport?.scale || 1,
                     }
+                },
+                screenSizes: {
+                    total: `${window.screen.width}x${window.screen.height}`,
+                    available: `${window.screen.availWidth}x${window.screen.availHeight}`,
+                    viewport: `${window.innerWidth}x${window.innerHeight}`,
+                    visualViewport: {
+                        size: window.visualViewport ?
+                            `${Math.round(window.visualViewport.width)}x${Math.round(window.visualViewport.height)}` : 'not supported',
+                        offsetTop: window.visualViewport?.offsetTop || 0,  // 상태바 높이
+                        offsetLeft: window.visualViewport?.offsetLeft || 0,
+                        scale: window.visualViewport?.scale || 1
+                    }
                 }
             };
+
+            // 초기 로드 시에만 정보 저장
+            if (!initialDeviceInfo) {
+                initialDeviceInfo = {
+                    screenSize: deviceInfo.browser.screenSize,
+                    reportedSize: deviceInfo.browser.reportedSize,
+                };
+            }
 
             const deviceInfoDiv = document.getElementById('device-info');
             deviceInfoDiv.innerHTML = `
@@ -198,15 +220,15 @@
                     height: ${deviceInfo.viewport.visualViewport.height}, 
                     scale: ${deviceInfo.viewport.visualViewport.scale}
                 </p>
-                <h3>브라우저별 화면 크기 정보</h3>
+                <h3>브라우저별 화면 크기 정보 (초기값)</h3>
                 <p><strong>브라우저:</strong> ${deviceInfo.browser.name}</p>
                 <p><strong>물리적 화면:</strong> ${deviceInfo.browser.screenSize.width}x${deviceInfo.browser.screenSize.height} (${deviceInfo.browser.screenSize.pixelRatio}x)</p>
-                <p><strong>Screen API:</strong> ${deviceInfo.browser.reportedSize.screen}</p>
-                <p><strong>Available Screen:</strong> ${deviceInfo.browser.reportedSize.availScreen}</p>
-                <p><strong>Window Inner:</strong> ${deviceInfo.browser.reportedSize.inner}</p>
-                <p><strong>Window Outer:</strong> ${deviceInfo.browser.reportedSize.outer}</p>
-                <p><strong>Client Size:</strong> ${deviceInfo.browser.reportedSize.client}</p>
-                <p><strong>Visual Viewport:</strong> ${deviceInfo.browser.reportedSize.visual}</p>
+                <p><strong>Screen API:</strong> ${initialDeviceInfo.reportedSize.screen}</p>
+                <p><strong>Available Screen:</strong> ${initialDeviceInfo.reportedSize.availScreen}</p>
+                <p><strong>Window Inner:</strong> ${initialDeviceInfo.reportedSize.inner}</p>
+                <p><strong>Window Outer:</strong> ${initialDeviceInfo.reportedSize.outer}</p>
+                <p><strong>Client Size:</strong> ${initialDeviceInfo.reportedSize.client}</p>
+                <p><strong>Visual Viewport:</strong> ${initialDeviceInfo.reportedSize.visual}</p>
                 <p><strong>Zoom Info:</strong> DPR: ${deviceInfo.browser.zoom.devicePixelRatio}, Scale: ${deviceInfo.browser.zoom.visualScale}</p>
             `;
         }
@@ -274,8 +296,21 @@
             return browser;
         }
 
+        // 디바운스 함수
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
         // 창 크기가 변경될 때마다 정보 업데이트
-        window.addEventListener('resize', getDeviceInfo);
+        window.addEventListener('resize', debounce(getDeviceInfo, 250));
         // 페이지 로드 시 기기 정보 표시
         window.onload = getDeviceInfo;
 
