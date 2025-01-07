@@ -17,6 +17,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>기기 정보</title>
     <meta name="apple-itunes-app" content="app-id=YOUR_APP_ID, app-argument=YOUR_DEEP_LINK">
     <meta property="al:ios:url" content="your-app-scheme://deep-link">
@@ -29,6 +30,12 @@
         body {
             font-size: 18px;
             font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            word-break: break-all;
+            box-sizing: border-box;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         h1 {
@@ -38,10 +45,17 @@
         #device-info {
             font-size: 20px;
             line-height: 1.6;
+            width: 100%;
         }
 
         strong {
             color: #333;
+        }
+
+        p {
+            margin: 10px 0;
+            width: 100%;
+            overflow-wrap: break-word;
         }
     </style>
 </head>
@@ -130,6 +144,7 @@
                 <p><strong>전체 화면 해상도:</strong> ${deviceInfo.screenResolution}</p>
                 <p><strong>사용 가능한 화면 크기:</strong> ${deviceInfo.screenAvailable}</p>
                 <p><strong>브라우저 창 크기:</strong> ${deviceInfo.browserWindow}</p>
+                
                 <p><strong>색상 심도:</strong> ${deviceInfo.screenColorDepth}</p>
                 <p><strong>네트워크 연결:</strong> ${deviceInfo.connection}</p>
                 <p><strong>디바이스 픽셀 비율:</strong> ${deviceInfo.ratio}</p>
