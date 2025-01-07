@@ -128,9 +128,35 @@
                         offsetLeft: window.visualViewport?.offsetLeft
                     }
                 },
+                browser: {
+                    name: getBrowserName(),
+                    // 실제 물리적 화면 크기
+                    screenSize: {
+                        width: window.screen.width,
+                        height: window.screen.height,
+                        pixelRatio: window.devicePixelRatio,
+                    },
+                    // 브라우저가 보고하는 화면 크기
+                    reportedSize: {
+                        // screen API
+                        screen: `${window.screen.width}x${window.screen.height}`,
+                        availScreen: `${window.screen.availWidth}x${window.screen.availHeight}`,
+                        // window API
+                        inner: `${window.innerWidth}x${window.innerHeight}`,
+                        outer: `${window.outerWidth}x${window.outerHeight}`,
+                        // client API
+                        client: `${document.documentElement.clientWidth}x${document.documentElement.clientHeight}`,
+                        // viewport API
+                        visual: window.visualViewport ?
+                            `${window.visualViewport.width}x${window.visualViewport.height}` : 'not supported'
+                    },
+                    // 줌 관련
+                    zoom: {
+                        devicePixelRatio: window.devicePixelRatio,
+                        visualScale: window.visualViewport?.scale || 1,
+                    }
+                }
             };
-
-
 
             const deviceInfoDiv = document.getElementById('device-info');
             deviceInfoDiv.innerHTML = `
@@ -164,6 +190,16 @@
                     height: ${deviceInfo.viewport.visualViewport.height}, 
                     scale: ${deviceInfo.viewport.visualViewport.scale}
                 </p>
+                <h3>브라우저별 화면 크기 정보</h3>
+                <p><strong>브라우저:</strong> ${deviceInfo.browser.name}</p>
+                <p><strong>물리적 화면:</strong> ${deviceInfo.browser.screenSize.width}x${deviceInfo.browser.screenSize.height} (${deviceInfo.browser.screenSize.pixelRatio}x)</p>
+                <p><strong>Screen API:</strong> ${deviceInfo.browser.reportedSize.screen}</p>
+                <p><strong>Available Screen:</strong> ${deviceInfo.browser.reportedSize.availScreen}</p>
+                <p><strong>Window Inner:</strong> ${deviceInfo.browser.reportedSize.inner}</p>
+                <p><strong>Window Outer:</strong> ${deviceInfo.browser.reportedSize.outer}</p>
+                <p><strong>Client Size:</strong> ${deviceInfo.browser.reportedSize.client}</p>
+                <p><strong>Visual Viewport:</strong> ${deviceInfo.browser.reportedSize.visual}</p>
+                <p><strong>Zoom Info:</strong> DPR: ${deviceInfo.browser.zoom.devicePixelRatio}, Scale: ${deviceInfo.browser.zoom.visualScale}</p>
             `;
         }
         // WebGL 핑거프린트
@@ -210,7 +246,25 @@
             }
         }
 
+        // 브라우저 이름 감지
+        function getBrowserName() {
+            const ua = navigator.userAgent;
+            let browser = "Unknown";
 
+            if (ua.match(/chrome|chromium|crios/i)) {
+                browser = "Chrome";
+            } else if (ua.match(/firefox|fxios/i)) {
+                browser = "Firefox";
+            } else if (ua.match(/safari/i)) {
+                browser = "Safari";
+            } else if (ua.match(/opr\//i)) {
+                browser = "Opera";
+            } else if (ua.match(/edg/i)) {
+                browser = "Edge";
+            }
+
+            return browser;
+        }
 
         // 창 크기가 변경될 때마다 정보 업데이트
         window.addEventListener('resize', getDeviceInfo);
