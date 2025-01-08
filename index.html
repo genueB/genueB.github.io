@@ -84,7 +84,7 @@
         let initialDeviceInfo = null;
 
         async function getDeviceInfo() {
-            // IP 주소 가져오기
+            // IP public주소 가져오기
             let ipAddress = '가져오는 중...';
             try {
                 const response = await fetch('https://api.ipify.org?format=json');
@@ -190,7 +190,7 @@
 
             const deviceInfoDiv = document.getElementById('device-info');
             deviceInfoDiv.innerHTML = `
-                <p><strong>IP 주소:</strong> ${deviceInfo.ipAddress}</p>
+                <p><strong>IP Public 주소:</strong> ${deviceInfo.ipAddress}</p>
                 <p><strong>현재 위치:</strong> ${deviceInfo.location}</p>
                 <p><strong>사용자 에이전트:</strong> ${deviceInfo.userAgent}</p>
                 <p><strong>플랫폼:</strong> ${deviceInfo.platform}</p>
@@ -223,12 +223,15 @@
                 <h3>브라우저별 화면 크기 정보 (초기값)</h3>
                 <p><strong>브라우저:</strong> ${deviceInfo.browser.name}</p>
                 <p><strong>물리적 화면:</strong> ${deviceInfo.browser.screenSize.width}x${deviceInfo.browser.screenSize.height} (${deviceInfo.browser.screenSize.pixelRatio}x)</p>
-                <p><strong>Screen API:</strong> ${initialDeviceInfo.reportedSize.screen}</p>
-                <p><strong>Available Screen:</strong> ${initialDeviceInfo.reportedSize.availScreen}</p>
-                <p><strong>Window Inner:</strong> ${initialDeviceInfo.reportedSize.inner}</p>
-                <p><strong>Window Outer:</strong> ${initialDeviceInfo.reportedSize.outer}</p>
-                <p><strong>Client Size:</strong> ${initialDeviceInfo.reportedSize.client}</p>
-                <p><strong>Visual Viewport:</strong> ${initialDeviceInfo.reportedSize.visual}</p>
+                <p><strong>screenSize width:</strong> ${initialDeviceInfo.screenSize.width}</p>
+                <p><strong>screenSize height:</strong> ${initialDeviceInfo.screenSize.height}</p>
+                <p><strong>screenSize pixelRatio:</strong> ${initialDeviceInfo.screenSize.pixelRatio}</p>
+                <p><strong>reportedSize Screen API:</strong> ${initialDeviceInfo.reportedSize.screen}</p>
+                <p><strong>reportedSize Available Screen:</strong> ${initialDeviceInfo.reportedSize.availScreen}</p>
+                <p><strong>reportedSize Window Inner:</strong> ${initialDeviceInfo.reportedSize.inner}</p>
+                <p><strong>reportedSize Window Outer:</strong> ${initialDeviceInfo.reportedSize.outer}</p>
+                <p><strong>reportedSize Client Size:</strong> ${initialDeviceInfo.reportedSize.client}</p>
+                <p><strong>reportedSize Visual Viewport:</strong> ${initialDeviceInfo.reportedSize.visual}</p>
                 <p><strong>Zoom Info:</strong> DPR: ${deviceInfo.browser.zoom.devicePixelRatio}, Scale: ${deviceInfo.browser.zoom.visualScale}</p>
             `;
         }
