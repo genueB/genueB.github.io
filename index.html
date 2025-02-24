@@ -402,7 +402,7 @@
         // 앱으로 이미지 선택 요청을 보내는 함수
         function requestImagePicker() {
             try {
-                if (window.Android || (window.webkit && window.webkit.messageHandlers))
+                if (window.Android || (window.webkit))
                     showImagePicker.postMessage('');
                 // window.flutter_inappwebview.callHandler('showImagePicker');
 
