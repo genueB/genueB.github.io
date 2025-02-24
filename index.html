@@ -424,7 +424,8 @@
             try {
                 const imageElement = document.getElementById('selectedImage');
                 // base64 이미지 데이터를 받았다고 가정
-                imageElement.src = "data:image/jpeg;base64," + imageData;
+                // imageElement.src = "data:image/jpeg;base64," + imageData;
+                imageElement.src = imageData;
                 imageElement.style.display = 'block';
             } catch (e) {
                 console.error("이미지 처리 에러:", e);
