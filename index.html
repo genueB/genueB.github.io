@@ -12,7 +12,7 @@
    </body>
 </html> -->
 
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 
 <head>
@@ -351,6 +351,79 @@
                 }, 2500);
             } else {
                 deeplinkUrlElement.textContent = '지원하지 않는 기기입니다.';
+            }
+        }
+    </script>
+</body>
+
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Picker Demo</title>
+    <style>
+        .container {
+            padding: 20px;
+            text-align: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        #selectedImage {
+            max-width: 100%;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button onclick="requestImagePicker()">이미지 선택하기</button>
+        <img id="selectedImage" alt="Selected Image">
+    </div>
+
+    <script>
+        // 앱으로 이미지 선택 요청을 보내는 함수
+        function requestImagePicker() {
+            try {
+                // Android의 경우
+                if (window.Android) {
+                    window.Android.showImagePicker();
+                }
+                // iOS의 경우
+                else if (window.webkit && window.webkit.messageHandlers) {
+                    window.webkit.messageHandlers.showImagePicker.postMessage("");
+                }
+            } catch (e) {
+                console.error("앱 통신 에러:", e);
+            }
+        }
+
+        // 앱에서 호출할 콜백 함수
+        function onImageSelected(imageData) {
+            try {
+                const imageElement = document.getElementById('selectedImage');
+                // base64 이미지 데이터를 받았다고 가정
+                imageElement.src = "data:image/jpeg;base64," + imageData;
+                imageElement.style.display = 'block';
+            } catch (e) {
+                console.error("이미지 처리 에러:", e);
             }
         }
     </script>
