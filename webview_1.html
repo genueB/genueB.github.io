@@ -61,7 +61,8 @@
         function requestImagePicker() {
             try {
                 // if (window.Android || (window.webkit))
-                showImagePicker.postMessage('message입니다');
+                // showImagePicker.postMessage('message입니다');
+                window.flutter_inappwebview.callHandler('showImagePicker', { action: 'download' });
                 // window.flutter_inappwebview.callHandler('showImagePicker');
 
                 // // Android의 경우
