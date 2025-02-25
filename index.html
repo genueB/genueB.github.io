@@ -358,80 +358,52 @@
 
 </html> -->
 
-
-
-
 <!DOCTYPE html>
 <html>
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Picker Demo</title>
+    <title>WebView Navigation</title>
     <style>
         .container {
             padding: 20px;
-            text-align: center;
+        }
+
+        .button-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
         button {
-            padding: 10px 20px;
+            padding: 15px 20px;
             font-size: 16px;
             cursor: pointer;
             background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
+            text-align: left;
         }
 
-        #selectedImage {
-            max-width: 100%;
-            margin-top: 20px;
-            display: none;
+        button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <button onclick="requestImagePicker()">이미지 선택하기</button>
-        <img id="selectedImage" alt="Selected Image">
+        <div class="button-list">
+            <button onclick="location.href='webview_1.html'">
+                첫 번째 페이지로 이동
+            </button>
+            <button onclick="location.href='webview_2.html'">
+                두 번째 페이지로 이동
+            </button>
+        </div>
     </div>
-
-    <script>
-        // 앱으로 이미지 선택 요청을 보내는 함수
-        function requestImagePicker() {
-            try {
-                // if (window.Android || (window.webkit))
-                showImagePicker.postMessage('');
-                // window.flutter_inappwebview.callHandler('showImagePicker');
-
-                // // Android의 경우
-                // if (window.Android) {
-                //     window.Android.showImagePicker();
-                // }
-                // // iOS의 경우
-                // else if (window.webkit && window.webkit.messageHandlers) {
-                //     window.webkit.messageHandlers.showImagePicker.postMessage("");
-                // }
-            } catch (e) {
-                console.error("앱 통신 에러:", e);
-            }
-        }
-
-        // 앱에서 호출할 콜백 함수
-        function onImageSelected(fileName, imageData) {
-            try {
-                const imageElement = document.getElementById('selectedImage');
-                // base64 이미지 데이터를 받았다고 가정
-                // imageElement.src = "data:image/jpeg;base64," + imageData;
-                imageElement.src = imageData;
-                imageElement.style.display = 'block';
-            } catch (e) {
-                console.error("이미지 처리 에러:", e);
-            }
-        }
-    </script>
 </body>
 
 </html>
