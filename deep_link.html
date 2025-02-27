@@ -325,7 +325,7 @@
             } else if (isIOS) {
                 // iOS 처리
                 const appUrl = `https://kotkam.app/${deepLinkParam}`;
-                const appStoreUrl = 'https://apps.apple.com/app/idYOUR_APP_ID';
+                const appStoreUrl = 'https://apps.apple.com/app/6738373049';
                 deeplinkUrlElement.textContent = `이동할 주소: ${appUrl}`;
 
                 // iOS Universal Links 또는 Custom URL Scheme 시도
@@ -334,7 +334,7 @@
                 // 앱이 설치되어 있지 않은 경우 App Store로 이동
                 setTimeout(() => {
                     window.location.href = appStoreUrl;
-                }, 2500);
+                }, 1000);
             } else {
                 deeplinkUrlElement.textContent = '지원하지 않는 기기입니다.';
             }
