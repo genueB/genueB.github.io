@@ -1,7 +1,8 @@
 const WebSocket = require('ws');
 
 // WebSocket 서버 생성 (포트 8080)
-const wss = new WebSocket.Server({ port: 8080 });
+// const wss = new WebSocket.Server({ port: 8080 });
+const socket = new WebSocket('wss://echo.websocket.org');
 
 // 연결된 모든 클라이언트를 저장할 Set
 const clients = new Set();
