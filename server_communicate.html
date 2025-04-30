@@ -54,13 +54,32 @@
             background-color: #45a049;
         }
 
-        #response {
+        .response-container {
             margin-top: 20px;
-            padding: 15px;
             border: 1px solid #ddd;
             border-radius: 4px;
-            min-height: 100px;
+        }
+
+        .response-header {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .response-body {
+            padding: 15px;
             white-space: pre-wrap;
+        }
+
+        .status-code {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .headers {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
         }
     </style>
 </head>
@@ -81,13 +100,22 @@
     "userId": 1
 }</textarea>
         </div>
-        <div id="response">응답이 여기에 표시됩니다...</div>
+        <div class="response-container">
+            <div class="response-header">
+                <span class="status-code">상태 코드: </span>
+                <span id="statusCode">-</span>
+            </div>
+            <div class="headers" id="headers">헤더 정보가 여기에 표시됩니다...</div>
+            <div class="response-body" id="response">응답 데이터가 여기에 표시됩니다...</div>
+        </div>
     </div>
 
     <script>
         async function sendRequest(method) {
             const url = document.getElementById('url').value;
             const responseDiv = document.getElementById('response');
+            const statusCodeDiv = document.getElementById('statusCode');
+            const headersDiv = document.getElementById('headers');
 
             try {
                 let response;
@@ -112,9 +140,22 @@
                     });
                 }
 
+                // 상태 코드 표시
+                statusCodeDiv.textContent = `${response.status} ${response.statusText}`;
+
+                // 헤더 정보 표시
+                const headers = [];
+                response.headers.forEach((value, key) => {
+                    headers.push(`${key}: ${value}`);
+                });
+                headersDiv.textContent = headers.join('\n');
+
+                // 응답 데이터 표시
                 const data = await response.json();
                 responseDiv.textContent = JSON.stringify(data, null, 2);
             } catch (error) {
+                statusCodeDiv.textContent = 'Error';
+                headersDiv.textContent = '';
                 responseDiv.textContent = `에러 발생: ${error.message}`;
             }
         }
