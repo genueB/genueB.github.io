@@ -88,17 +88,13 @@
     <div class="container">
         <h1>API 통신 테스트</h1>
         <div class="input-group">
-            <input type="text" id="url" placeholder="API 주소를 입력하세요" value="https://jsonplaceholder.typicode.com/posts">
+            <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://">
             <button onclick="sendRequest('GET')">GET</button>
             <button onclick="sendRequest('POST')">POST</button>
         </div>
         <div>
             <h3>요청 데이터 (POST 요청 시 사용)</h3>
-            <textarea id="requestData" placeholder="JSON 형식으로 데이터를 입력하세요">{
-    "title": "테스트 제목",
-    "body": "테스트 내용",
-    "userId": 1
-}</textarea>
+            <textarea id="requestData" placeholder="전송할 문자열을 입력하세요">테스트 데이터</textarea>
         </div>
         <div class="response-container">
             <div class="response-header">
@@ -123,20 +119,12 @@
                     response = await fetch(url);
                 } else if (method === 'POST') {
                     const requestData = document.getElementById('requestData').value;
-                    let body;
-                    try {
-                        body = JSON.parse(requestData);
-                    } catch (e) {
-                        responseDiv.textContent = 'JSON 형식이 올바르지 않습니다.';
-                        return;
-                    }
-
                     response = await fetch(url, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
+                            'Content-Type': 'text/plain',
                         },
-                        body: JSON.stringify(body)
+                        body: requestData
                     });
                 }
 
@@ -151,8 +139,8 @@
                 headersDiv.textContent = headers.join('\n');
 
                 // 응답 데이터 표시
-                const data = await response.json();
-                responseDiv.textContent = JSON.stringify(data, null, 2);
+                const data = await response.text();
+                responseDiv.textContent = data;
             } catch (error) {
                 statusCodeDiv.textContent = 'Error';
                 headersDiv.textContent = '';
