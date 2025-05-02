@@ -123,8 +123,6 @@
                         headers: {
                             'Content-Type': 'text/plain',
                         }
-                    }).catch(error => {
-                        console.error('Error:', error);
                     });
                 } else if (method === 'POST') {
                     const requestData = document.getElementById('requestData').value;
@@ -135,8 +133,6 @@
                             'Content-Type': 'text/plain',
                         },
                         body: requestData
-                    }).catch(error => {
-                        console.error('Error:', error);
                     });
                 }
 
