@@ -109,12 +109,12 @@
     </div>
 
     <script>
+        const responseDiv = document.getElementById('response');
+        const statusCodeDiv = document.getElementById('statusCode');
+        const headersDiv = document.getElementById('headers');
+
         function sendRequest(method) {
             const targetUrl = document.getElementById('url').value;
-            const responseDiv = document.getElementById('response');
-            const statusCodeDiv = document.getElementById('statusCode');
-            const headersDiv = document.getElementById('headers');
-
 
             let response;
             if (method === 'GET') {
