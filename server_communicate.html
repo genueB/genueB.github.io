@@ -117,7 +117,7 @@
                 let response;
                 if (method === 'GET') {
                     // response = await fetch(url);
-                    response = await fetch(`http://localhost:8761`, {
+                    response = await fetch(targetUrl, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'text/plain',
@@ -126,7 +126,7 @@
                 } else if (method === 'POST') {
                     const requestData = document.getElementById('requestData').value;
                     // response = await fetch(url, {
-                    response = await fetch(`http://localhost:8761`, {
+                    response = await fetch(targetUrl, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'text/plain',
