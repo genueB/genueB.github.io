@@ -89,7 +89,8 @@
     <div class="container">
         <h1>API 통신 테스트</h1>
         <div class="input-group">
-            <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://10.138.57.150:8761">
+            <!-- <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://10.138.57.150:8761"> -->
+            <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://localhost:8761">
             <button onclick="sendRequest('GET')">GET</button>
             <button onclick="sendRequest('POST')">POST</button>
         </div>
@@ -121,7 +122,7 @@
                     response = await fetch(targetUrl, {
                         method: 'GET',
                         headers: {
-                            'Content-Type': 'Text/plain',
+                            'content-type': 'text/plain',
                         }
                     });
                 } else if (method === 'POST') {
@@ -130,7 +131,7 @@
                     response = await fetch(targetUrl, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'Text/plain',
+                            'content-type': 'text/plain',
                         },
                         body: requestData
                     });
