@@ -109,7 +109,7 @@
     </div>
 
     <script>
-        async function sendRequest(method) {
+        function sendRequest(method) {
             const targetUrl = document.getElementById('url').value;
             const responseDiv = document.getElementById('response');
             const statusCodeDiv = document.getElementById('statusCode');
@@ -119,42 +119,52 @@
                 let response;
                 if (method === 'GET') {
                     // response = await fetch(url);
-                    response = await fetch(targetUrl, {
+                    response = fetch(targetUrl, {
                         method: 'GET',
                         headers: {
                             'content-type': 'text/plain',
                         }
+                    }).then(response => {
+                        handleResponse(response);
                     });
                 } else if (method === 'POST') {
                     const requestData = document.getElementById('requestData').value;
                     // response = await fetch(url, {
-                    response = await fetch(targetUrl, {
+                    fetch(targetUrl, {
                         method: 'POST',
                         headers: {
                             'content-type': 'text/plain',
                         },
                         body: requestData
+                    }).then(response => {
+                        handleResponse(response);
                     });
                 }
 
-                // 상태 코드 표시
-                statusCodeDiv.textContent = `${response.status} ${response.statusText}`;
 
-                // 헤더 정보 표시
-                const headers = [];
-                response.headers.forEach((value, key) => {
-                    headers.push(`${key}: ${value}`);
-                });
-                headersDiv.textContent = headers.join('\n');
-
-                // 응답 데이터 표시
-                const data = await response.text();
-                responseDiv.textContent = data;
             } catch (error) {
                 statusCodeDiv.textContent = 'Error';
                 headersDiv.textContent = '';
                 responseDiv.textContent = `에러 발생: ${error.message}`;
             }
+        }
+
+        function handleResponse(response) {
+
+            // 상태 코드 표시
+            statusCodeDiv.textContent = `${response.status} ${response.statusText}`;
+
+            // 헤더 정보 표시
+            const headers = [];
+            response.headers.forEach((value, key) => {
+                headers.push(`${key}: ${value}`);
+            });
+            headersDiv.textContent = headers.join('\n');
+
+            // 응답 데이터 표시
+            response.text().then(data => {
+                responseDiv.textContent = data;
+            });
         }
     </script>
 </body>
