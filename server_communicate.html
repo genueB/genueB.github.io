@@ -88,6 +88,9 @@
 <body>
     <div class="container">
         <h1>API 통신 테스트</h1>
+        <div id="ipAddress" style="margin-bottom: 20px; padding: 10px; background-color: #f0f0f0; border-radius: 4px;">
+            IP 주소: <span id="ipText">확인 중...</span>
+        </div>
         <div class="input-group">
             <!-- <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://10.138.57.150:8761"> -->
             <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://localhost:8761">
@@ -112,6 +115,11 @@
         const responseDiv = document.getElementById('response');
         const statusCodeDiv = document.getElementById('statusCode');
         const headersDiv = document.getElementById('headers');
+
+        const getIp = require('ip');
+        let ip = getIp.address();
+        const ipText = document.getElementById('ipText');
+        ipText.textContent = ip;
 
         function sendRequest(method) {
             const targetUrl = document.getElementById('url').value;
