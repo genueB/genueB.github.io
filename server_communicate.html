@@ -88,7 +88,7 @@
     <div class="container">
         <h1>API 통신 테스트</h1>
         <div class="input-group">
-            <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://">
+            <input type="text" id="url" placeholder="API 주소를 입력하세요" value="http://10.138.57.150:8761">
             <button onclick="sendRequest('GET')">GET</button>
             <button onclick="sendRequest('POST')">POST</button>
         </div>
@@ -108,7 +108,7 @@
 
     <script>
         async function sendRequest(method) {
-            const url = document.getElementById('url').value;
+            const targetUrl = document.getElementById('url').value;
             const responseDiv = document.getElementById('response');
             const statusCodeDiv = document.getElementById('statusCode');
             const headersDiv = document.getElementById('headers');
@@ -116,10 +116,12 @@
             try {
                 let response;
                 if (method === 'GET') {
-                    response = await fetch(url);
+                    // response = await fetch(url);
+                    response = await fetch(`http://localhost:8761`);
                 } else if (method === 'POST') {
                     const requestData = document.getElementById('requestData').value;
-                    response = await fetch(url, {
+                    // response = await fetch(url, {
+                    response = await fetch(`http://localhost:8761`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'text/plain',
