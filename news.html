@@ -527,6 +527,7 @@
             clearAlert();
 
             const fromDate = new Date(document.getElementById("fromDate").value);
+            fromDate.setHours(0, 0, 0, 0); // 시작 날짜는 00:00:00부터
             const toDate = new Date(document.getElementById("toDate").value);
             toDate.setHours(23, 59, 59, 999); // 끝 날짜는 해당일 끝까지 포함
 
