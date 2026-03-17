@@ -379,6 +379,10 @@
                         <input type="date" id="fromDate">
                     </div>
                     <div>
+                        <label>끝 날짜</label>
+                        <input type="date" id="toDate">
+                    </div>
+                    <div>
                         <label>정렬</label>
                         <div class="sort-grid">
                             <button class="btn btn-primary" id="sortPublished"
@@ -414,12 +418,14 @@
         let sort = "publishedAt";
         let abortController = null;
 
-        // 기본 날짜: 7일 전
+        // 기본 날짜: 시작 7일 전, 끝 오늘
         const pad = n => String(n).padStart(2, "0");
         const toISO = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const today = new Date();
         const defaultFrom = new Date();
-        defaultFrom.setDate(defaultFrom.getDate() - 7);
+        defaultFrom.setDate(today.getDate() - 7);
         document.getElementById("fromDate").value = toISO(defaultFrom);
+        document.getElementById("toDate").value = toISO(today);
 
         // --- Keyword 관리 ---
         function renderBadges() {
@@ -521,16 +527,19 @@
             clearAlert();
 
             const fromDate = new Date(document.getElementById("fromDate").value);
+            const toDate = new Date(document.getElementById("toDate").value);
+            toDate.setHours(23, 59, 59, 999); // 끝 날짜는 해당일 끝까지 포함
 
             try {
                 // 키워드를 OR로 묶어 한 번에 검색 (Google News 쿼리 문법)
                 const query = keywords.join(" OR ");
                 const items = await fetchRss(query, abortController.signal);
 
-                // 날짜 필터
+                // 날짜 범위 필터
                 const filtered = items.filter(it => {
                     if (!it.publishedAt) return true;
-                    return new Date(it.publishedAt) >= fromDate;
+                    const d = new Date(it.publishedAt);
+                    return d >= fromDate && d <= toDate;
                 });
 
                 // 각 기사에 어떤 키워드가 매칭됐는지 표시
