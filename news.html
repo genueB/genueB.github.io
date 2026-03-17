@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>키워드 뉴스 모으기</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #f5f5f5;
+            color: #111;
+            min-height: 100vh;
+        }
+
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Header */
+        header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        header p {
+            margin-top: 6px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* Card */
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+            padding: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 260px;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* Label */
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        /* Input */
+        input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color .15s;
+        }
+
+        input[type="text"]:focus, input[type="date"]:focus {
+            border-color: #2563eb;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: opacity .15s, background .15s;
+        }
+
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
+        .btn-secondary { background: #e5e7eb; color: #333; }
+        .btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+        .btn-ghost { background: transparent; color: #555; }
+        .btn-ghost:hover { background: #f3f4f6; }
+        .btn-full { width: 100%; justify-content: center; }
+
+        /* Input row */
+        .input-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-row input { flex: 1; }
+
+        /* Keyword badges */
+        .badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+            min-height: 28px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #e5e7eb;
+            color: #333;
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 13px;
+        }
+
+        .badge-remove {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .badge-remove:hover { color: #111; }
+
+        .badge-outline {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #555;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+
+        /* Actions row */
+        .actions { margin-top: 10px; }
+
+        /* Separator */
+        .sep {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 16px 0;
+        }
+
+        /* Sort buttons */
+        .sort-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        /* Alert */
+        .alert {
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .alert-error .alert-title { font-weight: 600; margin-bottom: 4px; }
+        .alert-error .alert-hint { margin-top: 6px; font-size: 12px; color: #b91c1c; opacity: .8; }
+
+        /* Skeleton */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .4; }
+        }
+
+        .skeleton {
+            background: #e5e7eb;
+            border-radius: 6px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .skeleton-line { height: 16px; margin-bottom: 8px; }
+        .skeleton-short { width: 50%; }
+        .skeleton-long { width: 80%; }
+
+        /* Article list */
+        .article-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .article-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+
+        .article-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1d4ed8;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .article-title:hover { text-decoration: underline; }
+
+        .article-meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .article-summary {
+            font-size: 14px;
+            color: #444;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        .article-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        /* Empty / footer */
+        .empty { font-size: 14px; color: #888; }
+        footer { font-size: 12px; color: #aaa; }
+
+        /* Spinner */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spin { display: inline-block; animation: spin .8s linear infinite; }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <header>
+            <h1>📰 키워드 뉴스 모으기</h1>
+            <p>키워드를 관리하고, 해당 키워드가 포함된 최신 기사 목록을 모아 봅니다.</p>
+        </header>
+
+        <!-- 설정 카드 -->
+        <div class="card">
+            <div class="card-title">키워드 &amp; 옵션</div>
+            <div class="grid">
+                <!-- 왼쪽: 키워드 -->
+                <div>
+                    <label>키워드 추가 (콤마로 여러 개)</label>
+                    <div class="input-row">
+                        <input type="text" id="keywordInput" placeholder="예: 금리, 엔비디아, 전기차">
+                        <button class="btn btn-secondary" onclick="addKeywords()">추가</button>
+                    </div>
+                    <div class="badge-list" id="badgeList"></div>
+                    <div class="actions">
+                        <button class="btn btn-ghost" onclick="clearAll()">전체 삭제</button>
+                    </div>
+                </div>
+
+                <!-- 오른쪽: 날짜 / 정렬 / 검색 -->
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div>
+                        <label>시작 날짜</label>
+                        <input type="date" id="fromDate">
+                    </div>
+                    <div>
+                        <label>정렬</label>
+                        <div class="sort-grid">
+                            <button class="btn btn-primary" id="sortPublished" onclick="setSort('publishedAt')">최신순</button>
+                            <button class="btn btn-secondary" id="sortRelevancy" onclick="setSort('relevancy')">관련도</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-full" id="searchBtn" onclick="runSearch()">
+                        🔍 검색
+                    </button>
+                </div>
+            </div>
+
+            <hr class="sep">
+            <div id="alertBox"></div>
+        </div>
+
+        <!-- 결과 카드 -->
+        <div class="card">
+            <div class="card-title">기사 목록</div>
+            <div id="resultArea"><p class="empty">검색하면 결과가 표시됩니다.</p></div>
+        </div>
+
+        <footer>팁: 키워드 매칭을 백엔드에서 하면 API 비용/속도/일관성이 좋아지고, 프론트는 결과 표시만 담당하는 구조가 유지됩니다.</footer>
+    </div>
+
+    <script>
+        // --- State ---
+        let keywords = ["AI", "반도체", "OpenAI"];
+        let sort = "publishedAt";
+        let abortController = null;
+
+        // 기본 날짜: 7일 전
+        const pad = n => String(n).padStart(2, "0");
+        const toISO = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+        const defaultFrom = new Date();
+        defaultFrom.setDate(defaultFrom.getDate() - 7);
+        document.getElementById("fromDate").value = toISO(defaultFrom);
+
+        // --- Keyword 관리 ---
+        function renderBadges() {
+            const list = document.getElementById("badgeList");
+            if (keywords.length === 0) {
+                list.innerHTML = '<span style="font-size:13px;color:#888;">키워드를 추가하세요.</span>';
+                return;
+            }
+            list.innerHTML = keywords.map(k => `
+                <span class="badge">
+                    ${escHtml(k)}
+                    <button class="badge-remove" onclick="removeKeyword('${escHtml(k)}')" aria-label="${escHtml(k)} 제거">✕</button>
+                </span>
+            `).join("");
+        }
+
+        function addKeywords() {
+            const input = document.getElementById("keywordInput");
+            const raw = input.value.split(",").map(s => s.trim()).filter(Boolean);
+            if (!raw.length) return;
+            keywords = [...new Set([...keywords, ...raw])];
+            input.value = "";
+            renderBadges();
+        }
+
+        function removeKeyword(k) {
+            keywords = keywords.filter(x => x !== k);
+            renderBadges();
+        }
+
+        function clearAll() {
+            keywords = [];
+            renderBadges();
+        }
+
+        // Enter 키로 추가
+        document.getElementById("keywordInput").addEventListener("keydown", e => {
+            if (e.key === "Enter") { e.preventDefault(); addKeywords(); }
+        });
+
+        // --- 정렬 ---
+        function setSort(value) {
+            sort = value;
+            document.getElementById("sortPublished").className =
+                "btn " + (sort === "publishedAt" ? "btn-primary" : "btn-secondary");
+            document.getElementById("sortRelevancy").className =
+                "btn " + (sort === "relevancy" ? "btn-primary" : "btn-secondary");
+        }
+
+        // --- 검색 ---
+        async function runSearch() {
+            if (keywords.length === 0) return;
+
+            if (abortController) abortController.abort();
+            abortController = new AbortController();
+
+            setLoading(true);
+            clearAlert();
+
+            const fromDate = document.getElementById("fromDate").value;
+            const params = new URLSearchParams({ keywords: keywords.join(","), from: fromDate, sort });
+
+            try {
+                const res = await fetch(`/api/news?${params}`, {
+                    signal: abortController.signal,
+                    headers: { "Accept": "application/json" }
+                });
+
+                if (!res.ok) {
+                    const text = await res.text().catch(() => "");
+                    throw new Error(`요청 실패: HTTP ${res.status}${text ? ` - ${text}` : ""}`);
+                }
+
+                const data = await res.json();
+                const items = Array.isArray(data?.items) ? data.items : [];
+
+                // 최신순 정렬 보강
+                items.sort((a, b) => new Date(b.publishedAt || 0) - new Date(a.publishedAt || 0));
+
+                renderItems(items);
+            } catch (e) {
+                if (e?.name === "AbortError") return;
+                showAlert(e.message || "알 수 없는 오류");
+                renderItems([]);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // --- UI 헬퍼 ---
+        function setLoading(on) {
+            const btn = document.getElementById("searchBtn");
+            if (on) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spin">⟳</span> 불러오는 중';
+                document.getElementById("resultArea").innerHTML = skeletonHTML();
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = "🔍 검색";
+            }
+        }
+
+        function skeletonHTML() {
+            return Array.from({ length: 5 }).map(() => `
+                <div style="margin-bottom:16px;">
+                    <div class="skeleton skeleton-line skeleton-long"></div>
+                    <div class="skeleton skeleton-line skeleton-short"></div>
+                </div>
+            `).join("");
+        }
+
+        function renderItems(items) {
+            const area = document.getElementById("resultArea");
+            if (items.length === 0) {
+                area.innerHTML = '<p class="empty">결과가 없습니다. 키워드를 바꾸거나 기간을 늘려 보세요.</p>';
+                return;
+            }
+            area.innerHTML = `<ul class="article-list" style="list-style:none;">${items.map(it => articleHTML(it)).join("")}</ul>`;
+        }
+
+        function articleHTML(it) {
+            const meta = [it.source, it.publishedAt ? new Date(it.publishedAt).toLocaleString() : ""].filter(Boolean).join(" · ");
+            const summary = it.summary ? `<p class="article-summary">${escHtml(it.summary)}</p>` : "";
+            const kws = Array.isArray(it.matchedKeywords) && it.matchedKeywords.length
+                ? `<div class="article-keywords">${it.matchedKeywords.map(k => `<span class="badge-outline">${escHtml(k)}</span>`).join("")}</div>`
+                : "";
+            return `
+                <li class="article-item">
+                    <a class="article-title" href="${escHtml(it.url || '#')}" target="_blank" rel="noreferrer">
+                        ${escHtml(it.title || "(제목 없음)")} <span style="font-size:12px;">↗</span>
+                    </a>
+                    ${meta ? `<div class="article-meta">${escHtml(meta)}</div>` : ""}
+                    ${summary}
+                    ${kws}
+                </li>
+            `;
+        }
+
+        function showAlert(msg) {
+            document.getElementById("alertBox").innerHTML = `
+                <div class="alert alert-error">
+                    <div class="alert-title">에러</div>
+                    <div>${escHtml(msg)}</div>
+                    <div class="alert-hint">/api/news 엔드포인트가 아직 없으면 404가 날 수 있어요. 백엔드를 먼저 구현하세요.</div>
+                </div>
+            `;
+        }
+
+        function clearAlert() {
+            document.getElementById("alertBox").innerHTML = "";
+        }
+
+        function escHtml(str) {
+            return String(str ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;");
+        }
+
+        // --- 초기화 ---
+        renderBadges();
+        runSearch();
+    </script>
+</body>
+
+</html>
