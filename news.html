@@ -532,8 +532,8 @@
             toDate.setHours(23, 59, 59, 999); // 끝 날짜는 해당일 끝까지 포함
 
             try {
-                // 키워드를 OR로 묶어 한 번에 검색 (Google News 쿼리 문법)
-                const query = keywords.join(" OR ");
+                // 키워드를 AND로 묶어 검색 (Google News 쿼리 문법: 공백 = AND)
+                const query = keywords.join(" ");
                 const items = await fetchRss(query, abortController.signal);
 
                 // 날짜 범위 필터
