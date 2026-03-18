@@ -478,14 +478,15 @@
         // --- 뉴스 fetch (Google News RSS + CORS 프록시) ---
         const CORS_PROXY = "https://api.allorigins.win/get?url=";
 
-        function buildRssUrl(query) {
+        function buildRssUrl(query, fromDate, toDate) {
             const base = "https://news.google.com/rss/search";
-            const params = new URLSearchParams({ q: query, hl: "ko", gl: "KR", ceid: "KR:ko" });
+            const dateQuery = `after:${toISO(fromDate)} before:${toISO(toDate)}`;
+            const params = new URLSearchParams({ q: `${query} ${dateQuery}`, hl: "ko", gl: "KR", ceid: "KR:ko" });
             return `${base}?${params}`;
         }
 
-        async function fetchRss(query, signal) {
-            const rssUrl = buildRssUrl(query);
+        async function fetchRss(query, fromDate, toDate, signal) {
+            const rssUrl = buildRssUrl(query, fromDate, toDate);
             const proxyUrl = CORS_PROXY + encodeURIComponent(rssUrl);
             const res = await fetch(proxyUrl, { signal });
             if (!res.ok) throw new Error(`RSS 요청 실패: HTTP ${res.status}`);
@@ -534,7 +535,7 @@
             try {
                 // 키워드를 AND로 묶어 검색 (Google News 쿼리 문법: 공백 = AND)
                 const query = keywords.join(" ");
-                const items = await fetchRss(query, abortController.signal);
+                const items = await fetchRss(query, fromDate, toDate, abortController.signal);
 
                 // 날짜 범위 필터
                 const filtered = items.filter(it => {
