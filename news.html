@@ -517,6 +517,21 @@
             });
         }
 
+        // --- 날짜 범위를 하루씩 쪼개서 배열로 반환 ---
+        function getDayRanges(fromDate, toDate) {
+            const ranges = [];
+            const cur = new Date(fromDate);
+            while (cur <= toDate) {
+                const dayStart = new Date(cur);
+                dayStart.setHours(0, 0, 0, 0);
+                const dayEnd = new Date(cur);
+                dayEnd.setHours(23, 59, 59, 999);
+                ranges.push({ from: dayStart, to: dayEnd });
+                cur.setDate(cur.getDate() + 1);
+            }
+            return ranges;
+        }
+
         // --- 검색 ---
         async function runSearch() {
             if (keywords.length === 0) return;
@@ -524,27 +539,54 @@
             if (abortController) abortController.abort();
             abortController = new AbortController();
 
-            setLoading(true);
             clearAlert();
 
             const fromDate = new Date(document.getElementById("fromDate").value);
-            fromDate.setHours(0, 0, 0, 0); // 시작 날짜는 00:00:00부터
+            fromDate.setHours(0, 0, 0, 0);
             const toDate = new Date(document.getElementById("toDate").value);
-            toDate.setHours(23, 59, 59, 999); // 끝 날짜는 해당일 끝까지 포함
+            toDate.setHours(23, 59, 59, 999);
+
+            const query = keywords.join(" ");
+            const dayRanges = getDayRanges(fromDate, toDate);
+            const total = dayRanges.length;
+            let done = 0;
+
+            setLoadingProgress(done, total);
+            document.getElementById("resultArea").innerHTML = skeletonHTML();
 
             try {
-                // 키워드를 AND로 묶어 검색 (Google News 쿼리 문법: 공백 = AND)
-                const query = keywords.join(" ");
-                const items = await fetchRss(query, fromDate, toDate, abortController.signal);
+                // 하루씩 병렬 요청
+                const results = await Promise.allSettled(
+                    dayRanges.map(({ from, to }) =>
+                        fetchRss(query, from, to, abortController.signal).then(items => {
+                            done++;
+                            setLoadingProgress(done, total);
+                            return items;
+                        })
+                    )
+                );
 
-                // 날짜 범위 필터
-                const filtered = items.filter(it => {
+                // 성공한 결과만 합치고 URL 기준으로 중복 제거
+                const seen = new Set();
+                const allItems = [];
+                for (const r of results) {
+                    if (r.status !== "fulfilled") continue;
+                    for (const item of r.value) {
+                        const key = item.url || item.title;
+                        if (key && seen.has(key)) continue;
+                        if (key) seen.add(key);
+                        allItems.push(item);
+                    }
+                }
+
+                // 날짜 범위 클라이언트 필터 (혹시 벗어난 것 제거)
+                const filtered = allItems.filter(it => {
                     if (!it.publishedAt) return true;
                     const d = new Date(it.publishedAt);
                     return d >= fromDate && d <= toDate;
                 });
 
-                // 각 기사에 어떤 키워드가 매칭됐는지 표시
+                // 매칭 키워드 표시
                 filtered.forEach(it => {
                     it.matchedKeywords = keywords.filter(k =>
                         it.title.toLowerCase().includes(k.toLowerCase()) ||
@@ -558,25 +600,30 @@
                 }
 
                 renderItems(filtered);
+
+                // 실패한 날짜가 있으면 경고
+                const failed = results.filter(r => r.status === "rejected").length;
+                if (failed > 0) {
+                    showAlert(`${total}일 중 ${failed}일 요청 실패. 일부 결과가 누락될 수 있습니다.`);
+                }
             } catch (e) {
                 if (e?.name === "AbortError") return;
                 showAlert(e.message || "알 수 없는 오류");
                 renderItems([]);
             } finally {
-                setLoading(false);
+                setLoadingProgress(null, null);
             }
         }
 
         // --- UI 헬퍼 ---
-        function setLoading(on) {
+        function setLoadingProgress(done, total) {
             const btn = document.getElementById("searchBtn");
-            if (on) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spin">⟳</span> 불러오는 중';
-                document.getElementById("resultArea").innerHTML = skeletonHTML();
-            } else {
+            if (total === null) {
                 btn.disabled = false;
                 btn.innerHTML = "🔍 검색";
+            } else {
+                btn.disabled = true;
+                btn.innerHTML = `<span class="spin">⟳</span> ${done}/${total}일 로딩 중`;
             }
         }
 
