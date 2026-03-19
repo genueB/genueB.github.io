@@ -127,6 +127,27 @@
 
     <div class="status-box" id="sendStatusBox"></div>
 
+    <hr style="margin: 28px 0; border: none; border-top: 1px solid #ddd;">
+
+    <h2 style="font-size: 18px; color: #333; margin-bottom: 16px;">자동 전송</h2>
+
+    <div class="input-row">
+        <label>목표<br>갯수</label>
+        <input type="number" id="autoCount" value="10" min="1" placeholder="촬영 목표 갯수">
+    </div>
+    <div class="input-row">
+        <label>대기<br>(ms)</label>
+        <input type="number" id="autoInterval" value="1000" min="0" placeholder="촬영간 대기 시간 (ms)">
+    </div>
+    <div class="input-row">
+        <label>촬영<br>(s)</label>
+        <input type="number" id="autoDuration" value="2" min="0" step="0.1" placeholder="촬영 시간 (s)">
+    </div>
+
+    <button class="connect-btn" id="autoBtn" onclick="toggleAuto()" style="background-color: #6f42c1;">자동 전송 시작</button>
+
+    <div class="status-box" id="autoStatusBox"></div>
+
     <div class="note">
         * GitHub Pages(HTTPS)에서 HTTP localhost 연결 시 브라우저의 혼합 콘텐츠 정책에 따라 차단될 수 있습니다.<br>
         * Flutter HttpServer에서 CORS 헤더(<code>Access-Control-Allow-Origin: *</code>)를 설정해야 합니다.
@@ -226,6 +247,84 @@
             box.className = `status-box ${type}`;
             box.style.display = 'block';
             box.style.whiteSpace = 'pre-line';
+        }
+
+        function showAutoStatus(message, type) {
+            const box = document.getElementById('autoStatusBox');
+            box.textContent = message;
+            box.className = `status-box ${type}`;
+            box.style.display = 'block';
+            box.style.whiteSpace = 'pre-line';
+        }
+
+        let autoRunning = false;
+        let autoAbort = false;
+
+        async function toggleAuto() {
+            if (autoRunning) {
+                autoAbort = true;
+                return;
+            }
+
+            const url = document.getElementById('urlInput').value.trim();
+            const port = document.getElementById('portInput').value.trim();
+            const count = parseInt(document.getElementById('autoCount').value);
+            const interval = parseInt(document.getElementById('autoInterval').value);
+            const duration = parseFloat(document.getElementById('autoDuration').value);
+            const btn = document.getElementById('autoBtn');
+
+            if (!url || !port) {
+                showAutoStatus('URL과 Port를 먼저 입력해주세요.', 'error');
+                return;
+            }
+
+            const target = `http://${url}:${port}`;
+            autoRunning = true;
+            autoAbort = false;
+            btn.textContent = '자동 전송 중지';
+            btn.style.backgroundColor = '#dc3545';
+
+            for (let i = 1; i <= count; i++) {
+                if (autoAbort) break;
+
+                showAutoStatus(`[${i}/${count}] 전송 중... (촬영 시간: ${duration}s, 대기: ${interval}ms)`, 'loading');
+
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 10000);
+
+                    const response = await fetch(target, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'text/plain' },
+                        body: String(duration),
+                        signal: controller.signal,
+                    });
+
+                    clearTimeout(timeout);
+                    const responseText = await response.text();
+                    showAutoStatus(`[${i}/${count}] 전송 성공 (${response.status})\n응답: ${responseText || '(없음)'}\n다음 전송까지 ${interval}ms 대기 중...`, 'loading');
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        showAutoStatus(`[${i}/${count}] 전송 시간 초과`, 'error');
+                    } else {
+                        showAutoStatus(`[${i}/${count}] 전송 실패: ${error.message}`, 'error');
+                    }
+                }
+
+                if (i < count && !autoAbort) {
+                    await new Promise(resolve => setTimeout(resolve, interval));
+                }
+            }
+
+            autoRunning = false;
+            btn.textContent = '자동 전송 시작';
+            btn.style.backgroundColor = '#6f42c1';
+
+            if (autoAbort) {
+                showAutoStatus('자동 전송이 중지되었습니다.', 'error');
+            } else {
+                showAutoStatus(`자동 전송 완료! 총 ${count}회 전송.`, 'success');
+            }
         }
     </script>
 </body>
