@@ -1,431 +1,499 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>HTTP 연결 테스트</title>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+      * {
+        box-sizing: border-box;
+      }
 
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 12px 16px;
+        background-color: #f9f9f9;
+        min-height: 100dvh;
+      }
+
+      h1 {
+        font-size: 18px;
+        color: #333;
+        margin: 0 0 12px 0;
+      }
+
+      .section {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 10px;
+      }
+
+      .section-title {
+        font-size: 12px;
+        font-weight: bold;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .row + .row {
+        margin-top: 6px;
+      }
+
+      label {
+        font-size: 13px;
+        color: #555;
+        flex-shrink: 0;
+        min-width: 32px;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        flex: 1;
+        padding: 7px 10px;
+        font-size: 14px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        min-width: 0;
+      }
+
+      input[type="number"].port-input {
+        width: 80px;
+        flex: none;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      .btn:disabled {
+        background-color: #aaa !important;
+        cursor: default;
+      }
+
+      .btn-connect {
+        background-color: #007bff;
+      }
+      .btn-connect:hover:not(:disabled) {
+        background-color: #0056b3;
+      }
+
+      .btn-send {
+        background-color: #28a745;
+      }
+      .btn-send:hover:not(:disabled) {
+        background-color: #1e7e34;
+      }
+
+      .btn-auto {
+        background-color: #6f42c1;
+      }
+      .btn-auto:hover:not(:disabled) {
+        background-color: #5a32a3;
+      }
+      .btn-auto.stopping {
+        background-color: #dc3545;
+      }
+      .btn-auto.stopping:hover:not(:disabled) {
+        background-color: #b02a37;
+      }
+
+      .status-box {
+        margin-top: 8px;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        display: none;
+        white-space: pre-line;
+        line-height: 1.4;
+      }
+
+      .status-box.success {
+        background-color: #d4edda;
+        border: 1px solid #28a745;
+        color: #155724;
+      }
+
+      .status-box.error {
+        background-color: #f8d7da;
+        border: 1px solid #dc3545;
+        color: #721c24;
+      }
+
+      .status-box.loading {
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        color: #856404;
+      }
+
+      .auto-inputs {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 6px;
+        margin-bottom: 8px;
+      }
+
+      .auto-input-item {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .auto-input-item label {
+        font-size: 11px;
+        color: #888;
+        min-width: unset;
+      }
+
+      .auto-input-item input {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 13px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      .note {
+        font-size: 11px;
+        color: #aaa;
+        line-height: 1.5;
+        margin-top: 2px;
+      }
+
+      @media (min-width: 600px) {
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 12px 16px;
-            background-color: #f9f9f9;
-            min-height: 100dvh;
+          max-width: 680px;
+          margin: 0 auto;
+          padding: 20px 24px;
         }
-
-        h1 {
-            font-size: 18px;
-            color: #333;
-            margin: 0 0 12px 0;
-        }
-
-        .section {
-            background: #fff;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-
-        .section-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-        }
-
-        .row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .row + .row {
-            margin-top: 6px;
-        }
-
-        label {
-            font-size: 13px;
-            color: #555;
-            flex-shrink: 0;
-            min-width: 32px;
-        }
-
-        input[type="text"],
-        input[type="number"] {
-            flex: 1;
-            padding: 7px 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            min-width: 0;
-        }
-
-        input[type="number"].port-input {
-            width: 80px;
-            flex: none;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
-
-        .btn:disabled {
-            background-color: #aaa !important;
-            cursor: default;
-        }
-
-        .btn-connect { background-color: #007bff; }
-        .btn-connect:hover:not(:disabled) { background-color: #0056b3; }
-
-        .btn-send { background-color: #28a745; }
-        .btn-send:hover:not(:disabled) { background-color: #1e7e34; }
-
-        .btn-auto { background-color: #6f42c1; }
-        .btn-auto:hover:not(:disabled) { background-color: #5a32a3; }
-        .btn-auto.stopping { background-color: #dc3545; }
-        .btn-auto.stopping:hover:not(:disabled) { background-color: #b02a37; }
-
-        .status-box {
-            margin-top: 8px;
-            padding: 7px 10px;
-            border-radius: 6px;
-            font-size: 13px;
-            display: none;
-            white-space: pre-line;
-            line-height: 1.4;
-        }
-
-        .status-box.success {
-            background-color: #d4edda;
-            border: 1px solid #28a745;
-            color: #155724;
-        }
-
-        .status-box.error {
-            background-color: #f8d7da;
-            border: 1px solid #dc3545;
-            color: #721c24;
-        }
-
-        .status-box.loading {
-            background-color: #fff3cd;
-            border: 1px solid #ffc107;
-            color: #856404;
-        }
-
-        .auto-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-
-        .auto-input-item {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-
-        .auto-input-item label {
-            font-size: 11px;
-            color: #888;
-            min-width: unset;
-        }
-
-        .auto-input-item input {
-            width: 100%;
-            padding: 6px 8px;
-            font-size: 13px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-        }
-
-        .note {
-            font-size: 11px;
-            color: #aaa;
-            line-height: 1.5;
-            margin-top: 2px;
-        }
-
-        /* 넓은 화면: 2열 레이아웃 */
-        @media (min-width: 600px) {
-            body {
-                max-width: 680px;
-                margin: 0 auto;
-                padding: 20px 24px;
-            }
-
-            .main-grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-                align-items: start;
-            }
-
-            .full-width {
-                grid-column: 1 / -1;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>HTTP 연결 테스트</h1>
 
-    <div class="main-grid">
-        <!-- 연결 섹션 -->
-        <div class="section">
-            <div class="section-title">연결</div>
-            <div class="row">
-                <label>URL</label>
-                <input type="text" id="urlInput" value="localhost" placeholder="예: 192.168.0.x">
-                <input type="number" id="portInput" class="port-input" value="3000" placeholder="3000">
-                <button class="btn btn-connect" id="connectBtn" onclick="connect()">연결</button>
-            </div>
-            <div class="status-box" id="statusBox"></div>
-        </div>
+    <!-- 연결 섹션 -->
+    <div class="section">
+      <div class="section-title">연결</div>
+      <div class="row">
+        <label>URL</label>
+        <input
+          type="text"
+          id="urlInput"
+          value="localhost"
+          placeholder="예: 192.168.0.x"
+        />
+        <input
+          type="number"
+          id="portInput"
+          class="port-input"
+          value="3000"
+          placeholder="3000"
+        />
+        <button class="btn btn-connect" id="connectBtn" onclick="connect()">
+          연결
+        </button>
+      </div>
+      <div class="status-box" id="statusBox"></div>
+    </div>
 
-        <!-- 전송 섹션 -->
-        <div class="section">
-            <div class="section-title">단건 전송</div>
-            <div class="row">
-                <label>값</label>
-                <input type="text" id="sendInput" placeholder="전송할 값">
-                <button class="btn btn-send" id="sendBtn" onclick="sendValue()">전송</button>
-            </div>
-            <div class="status-box" id="sendStatusBox"></div>
-        </div>
+    <!-- 전송 섹션 -->
+    <div class="section">
+      <div class="section-title">단건 전송</div>
+      <div class="row">
+        <label>값</label>
+        <input type="text" id="sendInput" placeholder="전송할 값" />
+        <button class="btn btn-send" id="sendBtn" onclick="sendValue()">
+          전송
+        </button>
+      </div>
+      <div class="status-box" id="sendStatusBox"></div>
+    </div>
 
-        <!-- 자동 전송 섹션 -->
-        <div class="section full-width">
-            <div class="section-title">자동 전송</div>
-            <div class="auto-inputs">
-                <div class="auto-input-item">
-                    <label>목표 갯수</label>
-                    <input type="number" id="autoCount" value="10" min="1">
-                </div>
-                <div class="auto-input-item">
-                    <label>대기 (ms)</label>
-                    <input type="number" id="autoInterval" value="1000" min="0">
-                </div>
-                <div class="auto-input-item">
-                    <label>촬영 시간 (s)</label>
-                    <input type="number" id="autoDuration" value="2" min="0" step="0.1">
-                </div>
-            </div>
-            <button class="btn btn-auto" id="autoBtn" onclick="toggleAuto()" style="width:100%;">자동 전송 시작</button>
-            <div class="status-box" id="autoStatusBox"></div>
+    <!-- 자동 전송 섹션 -->
+    <div class="section">
+      <div class="section-title">자동 전송</div>
+      <div class="auto-inputs">
+        <div class="auto-input-item">
+          <label>목표 갯수</label>
+          <input type="number" id="autoCount" value="10" min="1" />
         </div>
+        <div class="auto-input-item">
+          <label>대기 (ms)</label>
+          <input type="number" id="autoInterval" value="1000" min="0" />
+        </div>
+        <div class="auto-input-item">
+          <label>촬영 시간 (s)</label>
+          <input
+            type="number"
+            id="autoDuration"
+            value="2"
+            min="0"
+            step="0.1"
+          />
+        </div>
+      </div>
+      <button
+        class="btn btn-auto"
+        id="autoBtn"
+        onclick="toggleAuto()"
+        style="width: 100%"
+      >
+        자동 전송 시작
+      </button>
+      <div class="status-box" id="autoStatusBox"></div>
+    </div>
 
-        <!-- 안내 -->
-        <div class="note full-width">
-            * GitHub Pages(HTTPS)에서 HTTP localhost 연결 시 브라우저의 혼합 콘텐츠 정책에 따라 차단될 수 있습니다.<br>
-            * Flutter HttpServer에서 CORS 헤더(<code>Access-Control-Allow-Origin: *</code>)를 설정해야 합니다.
-        </div>
+    <!-- 안내 -->
+    <div class="note">
+      * GitHub Pages(HTTPS)에서 HTTP localhost 연결 시 브라우저의 혼합 콘텐츠
+      정책에 따라 차단될 수 있습니다.<br />
+      * Flutter HttpServer에서 CORS 헤더(<code
+        >Access-Control-Allow-Origin: *</code
+      >)를 설정해야 합니다.
     </div>
 
     <script>
-        async function connect() {
-            const url = document.getElementById('urlInput').value.trim();
-            const port = document.getElementById('portInput').value.trim();
-            const btn = document.getElementById('connectBtn');
+      async function connect() {
+        const url = document.getElementById("urlInput").value.trim();
+        const port = document.getElementById("portInput").value.trim();
+        const btn = document.getElementById("connectBtn");
 
-            if (!url || !port) {
-                showStatus('URL과 Port를 모두 입력해주세요.', 'error');
-                return;
-            }
-
-            const target = `http://${url}:${port}`;
-            btn.disabled = true;
-            showStatus(`${target} 에 연결 중...`, 'loading');
-
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 5000);
-                const response = await fetch(target, { method: 'GET', signal: controller.signal });
-                clearTimeout(timeout);
-                const ok = response.ok;
-                showStatus(`${ok ? '연결 성공!' : '연결 실패'} (${response.status} ${response.statusText})\n대상: ${target}`, ok ? 'success' : 'error');
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    showStatus(`연결 시간 초과 (5초)\n대상: ${target}`, 'error');
-                } else {
-                    showStatus(`연결 실패: ${error.message}\n대상: ${target}`, 'error');
-                }
-            } finally {
-                btn.disabled = false;
-            }
+        if (!url || !port) {
+          showStatus("URL과 Port를 모두 입력해주세요.", "error");
+          return;
         }
 
-        async function sendValue() {
-            const url = document.getElementById('urlInput').value.trim();
-            const port = document.getElementById('portInput').value.trim();
-            const value = document.getElementById('sendInput').value.trim();
-            const btn = document.getElementById('sendBtn');
+        const target = `http://${url}:${port}`;
+        btn.disabled = true;
+        showStatus(`${target} 에 연결 중...`, "loading");
 
-            if (!url || !port) {
-                showSendStatus('URL과 Port를 먼저 입력해주세요.', 'error');
-                return;
-            }
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          const response = await fetch(target, {
+            method: "GET",
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          const ok = response.ok;
+          showStatus(
+            `${ok ? "연결 성공!" : "연결 실패"} (${response.status} ${response.statusText})\n대상: ${target}`,
+            ok ? "success" : "error",
+          );
+        } catch (error) {
+          if (error.name === "AbortError") {
+            showStatus(`연결 시간 초과 (5초)\n대상: ${target}`, "error");
+          } else {
+            showStatus(`연결 실패: ${error.message}\n대상: ${target}`, "error");
+          }
+        } finally {
+          btn.disabled = false;
+        }
+      }
 
-            const target = `http://${url}:${port}`;
-            btn.disabled = true;
-            showSendStatus('전송 중...', 'loading');
+      async function sendValue() {
+        const url = document.getElementById("urlInput").value.trim();
+        const port = document.getElementById("portInput").value.trim();
+        const value = document.getElementById("sendInput").value.trim();
+        const btn = document.getElementById("sendBtn");
 
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 5000);
-                const response = await fetch(target, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: value,
-                    signal: controller.signal,
-                });
-                clearTimeout(timeout);
-                const responseText = await response.text();
-                const ok = response.ok;
-                showSendStatus(`${ok ? '전송 성공!' : '전송 실패'} (${response.status} ${response.statusText})\n응답: ${responseText || '(없음)'}`, ok ? 'success' : 'error');
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    showSendStatus('전송 시간 초과 (5초)', 'error');
-                } else {
-                    showSendStatus(`전송 실패: ${error.message}`, 'error');
-                }
-            } finally {
-                btn.disabled = false;
-            }
+        if (!url || !port) {
+          showSendStatus("URL과 Port를 먼저 입력해주세요.", "error");
+          return;
         }
 
-        function showStatus(message, type) {
-            const box = document.getElementById('statusBox');
-            box.textContent = message;
-            box.className = `status-box ${type}`;
-            box.style.display = 'block';
+        const target = `http://${url}:${port}`;
+        btn.disabled = true;
+        showSendStatus("전송 중...", "loading");
+
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 5000);
+          const response = await fetch(target, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: value,
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          const responseText = await response.text();
+          const ok = response.ok;
+          showSendStatus(
+            `${ok ? "전송 성공!" : "전송 실패"} (${response.status} ${response.statusText})\n응답: ${responseText || "(없음)"}`,
+            ok ? "success" : "error",
+          );
+        } catch (error) {
+          if (error.name === "AbortError") {
+            showSendStatus("전송 시간 초과 (5초)", "error");
+          } else {
+            showSendStatus(`전송 실패: ${error.message}`, "error");
+          }
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function showStatus(message, type) {
+        const box = document.getElementById("statusBox");
+        box.textContent = message;
+        box.className = `status-box ${type}`;
+        box.style.display = "block";
+      }
+
+      function showSendStatus(message, type) {
+        const box = document.getElementById("sendStatusBox");
+        box.textContent = message;
+        box.className = `status-box ${type}`;
+        box.style.display = "block";
+      }
+
+      function showAutoStatus(message, type) {
+        const box = document.getElementById("autoStatusBox");
+        box.textContent = message;
+        box.className = `status-box ${type}`;
+        box.style.display = "block";
+      }
+
+      async function postValue(target, value) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+          const response = await fetch(target, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain" },
+            body: value,
+            signal: controller.signal,
+          });
+          clearTimeout(timeout);
+          return response;
+        } catch (error) {
+          clearTimeout(timeout);
+          throw error;
+        }
+      }
+
+      let autoRunning = false;
+      let autoAbort = false;
+
+      async function toggleAuto() {
+        if (autoRunning) {
+          autoAbort = true;
+          return;
         }
 
-        function showSendStatus(message, type) {
-            const box = document.getElementById('sendStatusBox');
-            box.textContent = message;
-            box.className = `status-box ${type}`;
-            box.style.display = 'block';
+        const url = document.getElementById("urlInput").value.trim();
+        const port = document.getElementById("portInput").value.trim();
+        const count = parseInt(document.getElementById("autoCount").value);
+        const interval = parseInt(
+          document.getElementById("autoInterval").value,
+        );
+        const duration = parseFloat(
+          document.getElementById("autoDuration").value,
+        );
+        const btn = document.getElementById("autoBtn");
+
+        if (!url || !port) {
+          showAutoStatus("URL과 Port를 먼저 입력해주세요.", "error");
+          return;
         }
 
-        function showAutoStatus(message, type) {
-            const box = document.getElementById('autoStatusBox');
-            box.textContent = message;
-            box.className = `status-box ${type}`;
-            box.style.display = 'block';
+        const target = `http://${url}:${port}`;
+        autoRunning = true;
+        autoAbort = false;
+        btn.textContent = "자동 전송 중지";
+        btn.classList.add("stopping");
+
+        for (let i = 1; i <= count; i++) {
+          if (autoAbort) break;
+
+          showAutoStatus(
+            `[${i}/${count}] 촬영 시작 신호 전송 (값: ${i})`,
+            "loading",
+          );
+          try {
+            const res = await postValue(target, String(i));
+            if (!res.ok) {
+              showAutoStatus(
+                `[${i}/${count}] 전송 실패 (${res.status} ${res.statusText})`,
+                "error",
+              );
+              break;
+            }
+          } catch (error) {
+            showAutoStatus(
+              `[${i}/${count}] 전송 실패: ${error.message}`,
+              "error",
+            );
+            break;
+          }
+
+          showAutoStatus(
+            `[${i}/${count}] 촬영 중... (${duration}s 대기)`,
+            "loading",
+          );
+          await new Promise((resolve) => setTimeout(resolve, duration * 1000));
+          if (autoAbort) break;
+
+          showAutoStatus(
+            `[${i}/${count}] 촬영 정지 신호 전송 (값: ${i})`,
+            "loading",
+          );
+          try {
+            const res = await postValue(target, String(i));
+            if (!res.ok) {
+              showAutoStatus(
+                `[${i}/${count}] 정지 신호 전송 실패 (${res.status} ${res.statusText})`,
+                "error",
+              );
+              break;
+            }
+          } catch (error) {
+            showAutoStatus(
+              `[${i}/${count}] 정지 신호 전송 실패: ${error.message}`,
+              "error",
+            );
+            break;
+          }
+
+          if (i < count && !autoAbort) {
+            showAutoStatus(
+              `[${i}/${count}] 완료. 다음 촬영까지 ${interval}ms 대기 중...`,
+              "loading",
+            );
+            await new Promise((resolve) => setTimeout(resolve, interval));
+          }
         }
 
-        async function postValue(target, value) {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            try {
-                const response = await fetch(target, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: value,
-                    signal: controller.signal,
-                });
-                clearTimeout(timeout);
-                return response;
-            } catch (error) {
-                clearTimeout(timeout);
-                throw error;
-            }
+        autoRunning = false;
+        btn.textContent = "자동 전송 시작";
+        btn.classList.remove("stopping");
+
+        if (autoAbort) {
+          showAutoStatus("자동 전송이 중지되었습니다.", "error");
+        } else {
+          showAutoStatus(`자동 전송 완료! 총 ${count}회 전송.`, "success");
         }
-
-        let autoRunning = false;
-        let autoAbort = false;
-
-        async function toggleAuto() {
-            if (autoRunning) {
-                autoAbort = true;
-                return;
-            }
-
-            const url = document.getElementById('urlInput').value.trim();
-            const port = document.getElementById('portInput').value.trim();
-            const count = parseInt(document.getElementById('autoCount').value);
-            const interval = parseInt(document.getElementById('autoInterval').value);
-            const duration = parseFloat(document.getElementById('autoDuration').value);
-            const btn = document.getElementById('autoBtn');
-
-            if (!url || !port) {
-                showAutoStatus('URL과 Port를 먼저 입력해주세요.', 'error');
-                return;
-            }
-
-            const target = `http://${url}:${port}`;
-            autoRunning = true;
-            autoAbort = false;
-            btn.textContent = '자동 전송 중지';
-            btn.classList.add('stopping');
-
-            for (let i = 1; i <= count; i++) {
-                if (autoAbort) break;
-
-                showAutoStatus(`[${i}/${count}] 촬영 시작 신호 전송 (값: ${i})`, 'loading');
-                try {
-                    const res = await postValue(target, String(i));
-                    if (!res.ok) {
-                        showAutoStatus(`[${i}/${count}] 전송 실패 (${res.status} ${res.statusText})`, 'error');
-                        break;
-                    }
-                } catch (error) {
-                    showAutoStatus(`[${i}/${count}] 전송 실패: ${error.message}`, 'error');
-                    break;
-                }
-
-                showAutoStatus(`[${i}/${count}] 촬영 중... (${duration}s 대기)`, 'loading');
-                await new Promise(resolve => setTimeout(resolve, duration * 1000));
-                if (autoAbort) break;
-
-                showAutoStatus(`[${i}/${count}] 촬영 정지 신호 전송 (값: ${i})`, 'loading');
-                try {
-                    const res = await postValue(target, String(i));
-                    if (!res.ok) {
-                        showAutoStatus(`[${i}/${count}] 정지 신호 전송 실패 (${res.status} ${res.statusText})`, 'error');
-                        break;
-                    }
-                } catch (error) {
-                    showAutoStatus(`[${i}/${count}] 정지 신호 전송 실패: ${error.message}`, 'error');
-                    break;
-                }
-
-                if (i < count && !autoAbort) {
-                    showAutoStatus(`[${i}/${count}] 완료. 다음 촬영까지 ${interval}ms 대기 중...`, 'loading');
-                    await new Promise(resolve => setTimeout(resolve, interval));
-                }
-            }
-
-            autoRunning = false;
-            btn.textContent = '자동 전송 시작';
-            btn.classList.remove('stopping');
-
-            if (autoAbort) {
-                showAutoStatus('자동 전송이 중지되었습니다.', 'error');
-            } else {
-                showAutoStatus(`자동 전송 완료! 총 ${count}회 전송.`, 'success');
-            }
-        }
+      }
     </script>
-</body>
-
+  </body>
 </html>
