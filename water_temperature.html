@@ -254,6 +254,7 @@
         let activeGroup = null;
         let selectedStation = null;
         let allObs = [];
+        let todayObs = [];
         let activeLayer = 1;
 
         // ── 초기화: 관측소 목록 로드 ──────────────────────────────
@@ -316,11 +317,16 @@
             document.getElementById("chartArea").innerHTML = skeletons(1);
 
             try {
-                const res = await fetch(`${BASE}/observations?sta_cde=${encodeURIComponent(sta_cde)}`);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                allObs = await res.json();
+                const [obsRes, todayRes] = await Promise.all([
+                    fetch(`${BASE}/observations?sta_cde=${encodeURIComponent(sta_cde)}`),
+                    fetch(`${BASE}/today-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
+                ]);
+                if (!obsRes.ok) throw new Error(`HTTP ${obsRes.status}`);
+                if (!todayRes.ok) throw new Error(`HTTP ${todayRes.status}`);
 
-                // 사용 가능한 첫 번째 계층으로 초기화
+                allObs   = await obsRes.json();
+                todayObs = await todayRes.json();
+
                 const availableLayers = [...new Set(allObs.map(o => o.obs_lay))].sort();
                 activeLayer = availableLayers[0] ?? 1;
 
@@ -385,28 +391,27 @@
         function renderChart() {
             const LAYER_COLORS = { 1: "#2563eb", 2: "#16a34a", 3: "#ea580c" };
 
-            // 오늘 날짜 문자열 (YYYY-MM-DD)
             const now = new Date();
             const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
-            const todayObs = allObs.filter(o => o.obs_dat === todayStr && o.wtr_tmp != null);
+            const validObs = todayObs.filter(o => o.wtr_tmp != null);
 
-            if (todayObs.length === 0) {
+            if (validObs.length === 0) {
                 document.getElementById("chartArea").innerHTML =
                     '<p class="empty">오늘 데이터가 없습니다.</p>';
                 return;
             }
 
-            // 계층별로 {분: 수온} 맵 생성
+            // 계층별로 {분: 수온} 맵 생성 (already sorted asc by API)
             const byLayer = {};
-            todayObs.forEach(o => {
+            validObs.forEach(o => {
                 if (!byLayer[o.obs_lay]) byLayer[o.obs_lay] = {};
                 const [h, m] = o.obs_tim.split(':').map(Number);
                 byLayer[o.obs_lay][h * 60 + m] = o.wtr_tmp;
             });
 
             const layers = Object.keys(byLayer).map(Number).sort();
-            const allTemps = todayObs.map(o => o.wtr_tmp);
+            const allTemps = validObs.map(o => o.wtr_tmp);
             const minT = Math.floor(Math.min(...allTemps) - 0.5);
             const maxT = Math.ceil(Math.max(...allTemps) + 0.5);
             const tRange = maxT - minT || 1;
