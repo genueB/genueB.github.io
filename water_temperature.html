@@ -141,26 +141,27 @@
         /* 차트 */
         .chart-wrap { overflow-x: auto; padding-bottom: 4px; }
 
-        .chart-bar-area {
+        .chart-legend {
             display: flex;
-            align-items: flex-end;
-            gap: 5px;
-            min-width: 520px;
-            height: 150px;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #444;
         }
 
-        .bar-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
+        .legend-item {
+            display: inline-flex;
             align-items: center;
-            gap: 3px;
+            gap: 6px;
         }
 
-        .bar-val  { font-size: 10px; color: #1d4ed8; font-weight: 600; }
-        .bar      { width: 100%; background: #93c5fd; border-radius: 4px 4px 0 0; min-height: 4px; }
-        .bar.now  { background: #2563eb; }
-        .bar-time { font-size: 10px; color: #888; white-space: nowrap; }
+        .legend-line {
+            display: inline-block;
+            width: 20px;
+            height: 2.5px;
+            border-radius: 2px;
+        }
 
         /* Alert / Empty */
         .alert {
@@ -380,44 +381,98 @@
             activeLayer = availableLayers[0];
         }
 
-        // ── 수온 추이 차트 ────────────────────────────────────────
+        // ── 수온 추이 차트 (꺾은선, 1일 기준, 계층별) ───────────────
         function renderChart() {
-            const layerObs = allObs.filter(o => o.obs_lay === activeLayer && o.wtr_tmp != null);
+            const LAYER_COLORS = { 1: "#2563eb", 2: "#16a34a", 3: "#ea580c" };
 
-            if (layerObs.length === 0) {
+            // 오늘 날짜 문자열 (YYYY-MM-DD)
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+            const todayObs = allObs.filter(o => o.obs_dat === todayStr && o.wtr_tmp != null);
+
+            if (todayObs.length === 0) {
                 document.getElementById("chartArea").innerHTML =
-                    '<p class="empty">차트 데이터가 없습니다.</p>';
+                    '<p class="empty">오늘 데이터가 없습니다.</p>';
                 return;
             }
 
-            // obs는 최신순 정렬 → 차트용으로 역순 (오래된 순)
-            const slice = layerObs.slice(0, 48).reverse();
-            const temps = slice.map(o => o.wtr_tmp);
-            const maxT = Math.max(...temps);
-            const minT = Math.min(...temps);
-            const range = maxT - minT || 1;
-            const chartH = 110;
+            // 계층별로 {분: 수온} 맵 생성
+            const byLayer = {};
+            todayObs.forEach(o => {
+                if (!byLayer[o.obs_lay]) byLayer[o.obs_lay] = {};
+                const [h, m] = o.obs_tim.split(':').map(Number);
+                byLayer[o.obs_lay][h * 60 + m] = o.wtr_tmp;
+            });
 
-            const bars = slice.map((o, i) => {
-                const h = Math.max(6, ((o.wtr_tmp - minT) / range) * chartH);
-                const timeStr = o.obs_tim?.slice(0, 5) ?? "";
-                const isLatest = i === slice.length - 1;
-                return `
-                    <div class="bar-col">
-                        ${isLatest ? `<div class="bar-val">${o.wtr_tmp.toFixed(1)}</div>` : `<div class="bar-val" style="visibility:hidden;">0</div>`}
-                        <div class="bar${isLatest ? ' now' : ''}" style="height:${h}px;"></div>
-                        <div class="bar-time">${escHtml(timeStr)}</div>
-                    </div>
-                `;
-            }).join("");
+            const layers = Object.keys(byLayer).map(Number).sort();
+            const allTemps = todayObs.map(o => o.wtr_tmp);
+            const minT = Math.floor(Math.min(...allTemps) - 0.5);
+            const maxT = Math.ceil(Math.max(...allTemps) + 0.5);
+            const tRange = maxT - minT || 1;
+
+            // SVG 레이아웃
+            const W = 760, H = 200;
+            const PAD = { top: 16, right: 16, bottom: 28, left: 38 };
+            const cW = W - PAD.left - PAD.right;
+            const cH = H - PAD.top - PAD.bottom;
+
+            const xOf = min => (min / 1410) * cW;          // 00:00=0 ~ 23:30=1410
+            const yOf = t   => cH - ((t - minT) / tRange) * cH;
+
+            // X 그리드 & 레이블 (2시간 간격)
+            let grid = '';
+            for (let h = 0; h <= 23; h += 2) {
+                const x = xOf(h * 60);
+                grid += `<line x1="${x}" y1="0" x2="${x}" y2="${cH}" stroke="#e5e7eb" stroke-width="1"/>`;
+                grid += `<text x="${x}" y="${cH + 18}" text-anchor="middle" font-size="10" fill="#999">${String(h).padStart(2,'0')}시</text>`;
+            }
+
+            // Y 그리드 & 레이블 (4단계)
+            let yAxis = '';
+            for (let i = 0; i <= 4; i++) {
+                const t = minT + (tRange * i / 4);
+                const y = yOf(t);
+                yAxis += `<line x1="0" y1="${y}" x2="${cW}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+                yAxis += `<text x="-6" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${t.toFixed(1)}</text>`;
+            }
+
+            // 계층별 꺾은선 + 점
+            let paths = '', dots = '';
+            layers.forEach(layer => {
+                const color = LAYER_COLORS[layer] || '#888';
+                const pts = Object.entries(byLayer[layer])
+                    .map(([min, tmp]) => ({ x: xOf(Number(min)), y: yOf(tmp), tmp: Number(tmp) }))
+                    .sort((a, b) => a.x - b.x);
+
+                if (pts.length === 0) return;
+
+                const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+                pts.forEach(p => {
+                    dots += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="2.5" fill="${color}"/>`;
+                });
+            });
+
+            // 범례
+            const legend = layers.map(l => `
+                <span class="legend-item">
+                    <span class="legend-line" style="background:${LAYER_COLORS[l] || '#888'};"></span>
+                    ${LAYER_LABEL[l] ?? `계층${l}`}
+                </span>
+            `).join('');
 
             document.getElementById("chartArea").innerHTML = `
+                <div class="chart-legend">${legend}</div>
                 <div class="chart-wrap">
-                    <div class="chart-bar-area">${bars}</div>
+                    <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:500px;display:block;">
+                        <g transform="translate(${PAD.left},${PAD.top})">
+                            ${grid}${yAxis}${paths}${dots}
+                        </g>
+                    </svg>
                 </div>
-                <p style="font-size:12px;color:#aaa;margin-top:10px;">
-                    ${LAYER_LABEL[activeLayer] ?? ""} · 최근 ${slice.length}회 관측 ·
-                    범위: ${minT.toFixed(1)}°C ~ ${maxT.toFixed(1)}°C
+                <p style="font-size:12px;color:#aaa;margin-top:6px;">
+                    ${todayStr} · 범위: ${minT.toFixed(1)}°C ~ ${maxT.toFixed(1)}°C
                 </p>
             `;
         }
