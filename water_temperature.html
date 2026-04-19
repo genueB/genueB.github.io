@@ -95,65 +95,48 @@
         }
 
         /* 수온 히어로 */
-        .layer-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .layer-tab {
-            padding: 6px 14px;
-            border: 2px solid #d1e3f8;
-            border-radius: 8px;
-            background: #f0f7ff;
-            font-size: 13px;
-            cursor: pointer;
-            color: #1a3c5e;
-            font-weight: 500;
-            transition: all .15s;
-        }
-
-        .layer-tab:hover  { border-color: #2563eb; }
-        .layer-tab.active { border-color: #2563eb; background: #2563eb; color: #fff; }
-        .layer-tab:disabled { opacity: .35; cursor: not-allowed; }
-
-        .temp-hero {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 4px;
-            padding: 16px 0 8px;
-        }
-
-        .temp-value {
-            font-size: 72px;
-            font-weight: 700;
-            line-height: 1;
-            color: #1d4ed8;
-        }
-
-        .temp-unit { font-size: 30px; font-weight: 400; color: #60a5fa; }
-        .temp-label { font-size: 14px; color: #666; margin-top: 4px; }
-        .temp-updated { font-size: 12px; color: #aaa; }
-
-        .info-grid {
+        .layer-row {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
         }
 
-        .info-item {
+        .layer-card {
             background: #f0f7ff;
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 12px;
+            padding: 16px;
             text-align: center;
         }
 
-        .info-item .i-label { font-size: 12px; color: #666; margin-bottom: 4px; }
-        .info-item .i-value { font-size: 20px; font-weight: 600; color: #1a3c5e; }
-        .info-item .i-unit  { font-size: 11px; color: #999; margin-top: 2px; }
+        .layer-card .lc-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a3c5e;
+            margin-bottom: 8px;
+        }
+
+        .layer-card .lc-temp {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .layer-card .lc-unit {
+            font-size: 20px;
+            font-weight: 400;
+        }
+
+        .layer-card .lc-time {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
+        .layer-card .lc-depth {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
 
         /* 차트 */
         .chart-wrap { overflow-x: auto; padding-bottom: 4px; }
@@ -349,80 +332,52 @@
             }
         }
 
-        // ── 현재 관측값 렌더 ──────────────────────────────────────
+        // ── 현재 관측값 렌더 (표층·중층·저층 동시 표시) ────────────
         function renderCurrentData() {
-            const layerObs = allObs.filter(o => o.obs_lay === activeLayer);
-            const latest = layerObs[0];
-
             const availableLayers = [...new Set(allObs.map(o => o.obs_lay))].sort();
-            const layerBtns = availableLayers.map(l => `
-                <button class="layer-tab${l === activeLayer ? ' active' : ''}"
-                    onclick="switchLayer(${l})">${LAYER_LABEL[l] ?? `계층${l}`}</button>
-            `).join("");
 
-            if (!latest) {
-                document.getElementById("currentArea").innerHTML = `
-                    <div class="layer-tabs">${layerBtns}</div>
-                    <p class="empty">해당 계층 데이터가 없습니다.</p>
-                `;
+            if (availableLayers.length === 0) {
+                document.getElementById("currentArea").innerHTML =
+                    '<p class="empty">데이터가 없습니다.</p>';
                 return;
             }
 
-            const tmp = latest.wtr_tmp;
-            const tmpColor = tmp == null ? "#aaa"
-                : tmp < 10 ? "#1d4ed8"
-                : tmp < 18 ? "#0284c7"
-                : tmp < 24 ? "#0891b2"
-                : "#ef4444";
+            const DEPTH_KEY = { 1: "sur_dep", 2: "mid_dep", 3: "bot_dep" };
 
-            const obsDatetime = latest.obs_dat && latest.obs_tim
-                ? `${latest.obs_dat} ${latest.obs_tim.slice(0, 5)}`
-                : "—";
-            const repairBadge = latest.repair_gbn === 2
-                ? `<span class="badge-repair">점검 중</span>` : "";
-            const layerDepth = activeLayer === 1 ? selectedStation?.sur_dep
-                : activeLayer === 2 ? selectedStation?.mid_dep
-                : selectedStation?.bot_dep;
-            const layerDesc = `${LAYER_LABEL[activeLayer] ?? ""} ${layerDepth != null ? layerDepth + "m" : ""}`;
+            const cards = availableLayers.map(layer => {
+                const latest = allObs.find(o => o.obs_lay === layer);
+                const tmp = latest?.wtr_tmp;
+                const tmpColor = tmp == null ? "#aaa"
+                    : tmp < 10 ? "#1d4ed8"
+                    : tmp < 18 ? "#0284c7"
+                    : tmp < 24 ? "#0891b2"
+                    : "#ef4444";
+                const depth = selectedStation?.[DEPTH_KEY[layer]];
+                const timeStr = latest?.obs_dat && latest?.obs_tim
+                    ? `${latest.obs_dat} ${latest.obs_tim.slice(0, 5)}`
+                    : "—";
+                const repairBadge = latest?.repair_gbn === 2
+                    ? `<span class="badge-repair">점검 중</span>` : "";
 
-            document.getElementById("currentArea").innerHTML = `
-                <div class="layer-tabs">${layerBtns}</div>
-                <div class="temp-hero">
-                    <div>
-                        <span class="temp-value" style="color:${tmpColor};">
-                            ${tmp != null ? tmp.toFixed(1) : "—"}
-                        </span><span class="temp-unit" style="color:${tmpColor};">°C</span>
-                        ${repairBadge}
+                return `
+                    <div class="layer-card">
+                        <div class="lc-title">${LAYER_LABEL[layer] ?? `계층${layer}`} ${repairBadge}</div>
+                        <div>
+                            <span class="lc-temp" style="color:${tmpColor};">
+                                ${tmp != null ? tmp.toFixed(1) : "—"}
+                            </span><span class="lc-unit" style="color:${tmpColor};">°C</span>
+                        </div>
+                        <div class="lc-depth">${depth != null ? `수심 ${depth}m` : ""}</div>
+                        <div class="lc-time">관측: ${escHtml(timeStr)}</div>
                     </div>
-                    <div class="temp-label">${escHtml(selectedStation?.sta_nam_kor ?? "")} · ${escHtml(layerDesc)}</div>
-                    <div class="temp-updated">관측: ${escHtml(obsDatetime)}</div>
-                </div>
-                <div class="info-grid">
-                    ${infoItem("염분", latest.sal, "psu")}
-                    ${infoItem("용존산소", latest.dox, "mg/L")}
-                    ${infoItem("수심", layerDepth, "m")}
-                    ${infoItem("관측소 코드", latest.sta_cde, "")}
-                </div>
-            `;
-        }
+                `;
+            }).join("");
 
-        function infoItem(label, value, unit) {
-            const display = value != null ? String(value) : "—";
-            return `
-                <div class="info-item">
-                    <div class="i-label">${escHtml(label)}</div>
-                    <div class="i-value" style="font-size:${display.length > 6 ? "14px" : "20px"};">
-                        ${escHtml(display)}
-                    </div>
-                    ${unit ? `<div class="i-unit">${escHtml(unit)}</div>` : ""}
-                </div>
-            `;
-        }
+            document.getElementById("currentArea").innerHTML =
+                `<div class="layer-row">${cards}</div>`;
 
-        function switchLayer(layer) {
-            activeLayer = layer;
-            renderCurrentData();
-            renderChart();
+            // 차트용 activeLayer를 첫 번째 계층으로 유지
+            activeLayer = availableLayers[0];
         }
 
         // ── 수온 추이 차트 ────────────────────────────────────────
