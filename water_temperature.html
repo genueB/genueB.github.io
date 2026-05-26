@@ -237,8 +237,16 @@
 
         <!-- 수온 추이 차트 -->
         <div class="card">
-            <div class="card-title">수온 추이</div>
+            <div class="card-title">수온 추이 (오늘)</div>
             <div id="chartArea">
+                <p class="empty">관측소를 선택하면 차트가 표시됩니다.</p>
+            </div>
+        </div>
+
+        <!-- 주간 수온 추이 -->
+        <div class="card">
+            <div class="card-title">주간 수온 추이 (7일 일평균)</div>
+            <div id="weeklyChartArea">
                 <p class="empty">관측소를 선택하면 차트가 표시됩니다.</p>
             </div>
         </div>
@@ -249,13 +257,13 @@
     <script>
         const BASE = "https://whatsthetemperserver.onrender.com";
         const LAYER_LABEL = { 1: "표층", 2: "중층", 3: "저층" };
+        const LAYER_COLORS = { 1: "#2563eb", 2: "#16a34a", 3: "#ea580c" };
 
         let allStations = [];
         let activeGroup = null;
         let selectedStation = null;
-        let allObs = [];
         let todayObs = [];
-        let activeLayer = 1;
+        let weeklyObs = [];
 
         // ── 초기화: 관측소 목록 로드 ──────────────────────────────
         async function init() {
@@ -315,44 +323,48 @@
 
             document.getElementById("currentArea").innerHTML = skeletons(2);
             document.getElementById("chartArea").innerHTML = skeletons(1);
+            document.getElementById("weeklyChartArea").innerHTML = skeletons(1);
 
             try {
-                const [obsRes, todayRes] = await Promise.all([
-                    fetch(`${BASE}/observations?sta_cde=${encodeURIComponent(sta_cde)}`),
+                const [todayRes, weeklyRes] = await Promise.all([
                     fetch(`${BASE}/today-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
+                    fetch(`${BASE}/weekly-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
                 ]);
-                if (!obsRes.ok) throw new Error(`HTTP ${obsRes.status}`);
                 if (!todayRes.ok) throw new Error(`HTTP ${todayRes.status}`);
+                if (!weeklyRes.ok) throw new Error(`HTTP ${weeklyRes.status}`);
 
-                allObs   = await obsRes.json();
-                todayObs = await todayRes.json();
-
-                const availableLayers = [...new Set(allObs.map(o => o.obs_lay))].sort();
-                activeLayer = availableLayers[0] ?? 1;
+                todayObs  = await todayRes.json();
+                weeklyObs = await weeklyRes.json();
 
                 renderCurrentData();
                 renderChart();
+                renderWeeklyChart();
             } catch (e) {
                 const html = `<div class="alert alert-error">데이터 로드 실패: ${escHtml(e.message)}</div>`;
                 document.getElementById("currentArea").innerHTML = html;
                 document.getElementById("chartArea").innerHTML = html;
+                document.getElementById("weeklyChartArea").innerHTML = html;
             }
         }
 
         // ── 현재 관측값 렌더 (표층·중층·저층 동시 표시) ────────────
         function renderCurrentData() {
-            const availableLayers = [...new Set(allObs.map(o => o.obs_lay))].sort();
+            // todayObs는 obs_tim asc 정렬 → 같은 계층 중 마지막이 최신값
+            const latestByLayer = {};
+            todayObs.forEach(o => { latestByLayer[o.obs_lay] = o; });
 
-            if (availableLayers.length === 0) {
+            const layers = Object.keys(latestByLayer).map(Number).sort();
+
+            if (layers.length === 0) {
                 document.getElementById("currentArea").innerHTML =
-                    '<p class="empty">데이터가 없습니다.</p>';
+                    '<p class="empty">오늘 관측된 데이터가 없습니다.</p>';
                 return;
             }
 
             const DEPTH_KEY = { 1: "sur_dep", 2: "mid_dep", 3: "bot_dep" };
 
-            const cards = availableLayers.map(layer => {
-                const latest = allObs.find(o => o.obs_lay === layer);
+            const cards = layers.map(layer => {
+                const latest = latestByLayer[layer];
                 const tmp = latest?.wtr_tmp;
                 const tmpColor = tmp == null ? "#aaa"
                     : tmp < 10 ? "#1d4ed8"
@@ -382,15 +394,10 @@
 
             document.getElementById("currentArea").innerHTML =
                 `<div class="layer-row">${cards}</div>`;
-
-            // 차트용 activeLayer를 첫 번째 계층으로 유지
-            activeLayer = availableLayers[0];
         }
 
-        // ── 수온 추이 차트 (꺾은선, 1일 기준, 계층별) ───────────────
+        // ── 오늘 수온 추이 차트 (꺾은선, 1일 기준, 계층별) ──────────
         function renderChart() {
-            const LAYER_COLORS = { 1: "#2563eb", 2: "#16a34a", 3: "#ea580c" };
-
             const now = new Date();
             const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
 
@@ -402,7 +409,7 @@
                 return;
             }
 
-            // 계층별로 {분: 수온} 맵 생성 (already sorted asc by API)
+            // 계층별 {분: 수온} 맵 (API가 obs_tim asc 정렬)
             const byLayer = {};
             validObs.forEach(o => {
                 if (!byLayer[o.obs_lay]) byLayer[o.obs_lay] = {};
@@ -416,16 +423,14 @@
             const maxT = Math.ceil(Math.max(...allTemps) + 0.5);
             const tRange = maxT - minT || 1;
 
-            // SVG 레이아웃
             const W = 760, H = 200;
             const PAD = { top: 16, right: 16, bottom: 28, left: 38 };
             const cW = W - PAD.left - PAD.right;
             const cH = H - PAD.top - PAD.bottom;
 
-            const xOf = min => (min / 1410) * cW;          // 00:00=0 ~ 23:30=1410
+            const xOf = min => (min / 1410) * cW;   // 00:00=0 ~ 23:30=1410
             const yOf = t   => cH - ((t - minT) / tRange) * cH;
 
-            // X 그리드 & 레이블 (2시간 간격)
             let grid = '';
             for (let h = 0; h <= 23; h += 2) {
                 const x = xOf(h * 60);
@@ -433,7 +438,6 @@
                 grid += `<text x="${x}" y="${cH + 18}" text-anchor="middle" font-size="10" fill="#999">${String(h).padStart(2,'0')}시</text>`;
             }
 
-            // Y 그리드 & 레이블 (4단계)
             let yAxis = '';
             for (let i = 0; i <= 4; i++) {
                 const t = minT + (tRange * i / 4);
@@ -442,12 +446,11 @@
                 yAxis += `<text x="-6" y="${y + 4}" text-anchor="end" font-size="10" fill="#999">${t.toFixed(1)}</text>`;
             }
 
-            // 계층별 꺾은선 + 점
             let paths = '', dots = '';
             layers.forEach(layer => {
                 const color = LAYER_COLORS[layer] || '#888';
                 const pts = Object.entries(byLayer[layer])
-                    .map(([min, tmp]) => ({ x: xOf(Number(min)), y: yOf(tmp), tmp: Number(tmp) }))
+                    .map(([min, tmp]) => ({ x: xOf(Number(min)), y: yOf(tmp) }))
                     .sort((a, b) => a.x - b.x);
 
                 if (pts.length === 0) return;
@@ -459,7 +462,6 @@
                 });
             });
 
-            // 범례
             const legend = layers.map(l => `
                 <span class="legend-item">
                     <span class="legend-line" style="background:${LAYER_COLORS[l] || '#888'};"></span>
@@ -479,6 +481,92 @@
                 <p style="font-size:12px;color:#aaa;margin-top:6px;">
                     ${todayStr} · 범위: ${minT.toFixed(1)}°C ~ ${maxT.toFixed(1)}°C
                 </p>
+            `;
+        }
+
+        // ── 주간 수온 추이 차트 (7일 일평균, 수심별) ─────────────────
+        function renderWeeklyChart() {
+            if (weeklyObs.length === 0) {
+                document.getElementById("weeklyChartArea").innerHTML =
+                    '<p class="empty">주간 데이터가 없습니다.</p>';
+                return;
+            }
+
+            const allTemps = weeklyObs.flatMap(d => [d.lay1, d.lay2, d.lay3].filter(v => v != null));
+            if (allTemps.length === 0) {
+                document.getElementById("weeklyChartArea").innerHTML =
+                    '<p class="empty">주간 데이터가 없습니다.</p>';
+                return;
+            }
+
+            const minT = Math.floor(Math.min(...allTemps) - 0.5);
+            const maxT = Math.ceil(Math.max(...allTemps) + 0.5);
+            const tRange = maxT - minT || 1;
+
+            const W = 760, H = 200;
+            const PAD = { top: 16, right: 16, bottom: 36, left: 38 };
+            const cW = W - PAD.left - PAD.right;
+            const cH = H - PAD.top - PAD.bottom;
+
+            const n = weeklyObs.length;
+            const xOf = i => n > 1 ? (i / (n - 1)) * cW : cW / 2;
+            const yOf = t => cH - ((t - minT) / tRange) * cH;
+
+            let grid = '';
+            weeklyObs.forEach((d, i) => {
+                const x = xOf(i);
+                const label = d.date.slice(5); // MM-DD
+                grid += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${cH}" stroke="#e5e7eb" stroke-width="1"/>`;
+                grid += `<text x="${x.toFixed(1)}" y="${cH + 22}" text-anchor="middle" font-size="10" fill="#999">${label}</text>`;
+            });
+
+            let yAxis = '';
+            for (let i = 0; i <= 4; i++) {
+                const t = minT + (tRange * i / 4);
+                const y = yOf(t);
+                yAxis += `<line x1="0" y1="${y.toFixed(1)}" x2="${cW}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="1"/>`;
+                yAxis += `<text x="-6" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#999">${t.toFixed(1)}</text>`;
+            }
+
+            let paths = '', dots = '';
+            [1, 2, 3].forEach(layNum => {
+                const key = `lay${layNum}`;
+                const pts = weeklyObs
+                    .map((d, i) => d[key] != null ? { x: xOf(i), y: yOf(d[key]) } : null)
+                    .filter(Boolean);
+
+                if (pts.length === 0) return;
+
+                const color = LAYER_COLORS[layNum];
+                const pathD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+                paths += `<path d="${pathD}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+                pts.forEach(p => {
+                    dots += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="${color}"/>`;
+                });
+            });
+
+            const activeLayers = [1, 2, 3].filter(l =>
+                weeklyObs.some(d => d[`lay${l}`] != null)
+            );
+            const legend = activeLayers.map(l => `
+                <span class="legend-item">
+                    <span class="legend-line" style="background:${LAYER_COLORS[l]};"></span>
+                    ${LAYER_LABEL[l]}
+                </span>
+            `).join('');
+
+            const dateRange = `${weeklyObs[0].date} ~ ${weeklyObs[weeklyObs.length - 1].date}`;
+
+            document.getElementById("weeklyChartArea").innerHTML = `
+                <div class="chart-legend">${legend}</div>
+                <div class="chart-wrap">
+                    <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:500px;display:block;">
+                        <g transform="translate(${PAD.left},${PAD.top})">
+                            ${grid}${yAxis}${paths}${dots}
+                        </g>
+                    </svg>
+                </div>
+                <p style="font-size:12px;color:#aaa;margin-top:6px;">${dateRange} · 수심별 일평균 수온</p>
             `;
         }
 
