@@ -336,29 +336,34 @@
             document.getElementById("thisWeekChartArea").innerHTML = skeletons(1);
 
             try {
-                const [todayRes, weeklyRes, thisWeekRes] = await Promise.all([
+                const [todayRes, weeklyRes] = await Promise.all([
                     fetch(`${BASE}/today-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
                     fetch(`${BASE}/weekly-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
-                    fetch(`${BASE}/this-week-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
                 ]);
                 if (!todayRes.ok) throw new Error(`HTTP ${todayRes.status}`);
                 if (!weeklyRes.ok) throw new Error(`HTTP ${weeklyRes.status}`);
-                if (!thisWeekRes.ok) throw new Error(`HTTP ${thisWeekRes.status}`);
 
-                todayObs    = await todayRes.json();
-                weeklyObs   = await weeklyRes.json();
-                thisWeekObs = await thisWeekRes.json();
+                todayObs  = await todayRes.json();
+                weeklyObs = await weeklyRes.json();
 
                 renderCurrentData();
                 renderChart();
                 renderWeeklyChart();
-                renderThisWeekChart();
             } catch (e) {
                 const html = `<div class="alert alert-error">데이터 로드 실패: ${escHtml(e.message)}</div>`;
                 document.getElementById("currentArea").innerHTML = html;
                 document.getElementById("chartArea").innerHTML = html;
                 document.getElementById("weeklyChartArea").innerHTML = html;
-                document.getElementById("thisWeekChartArea").innerHTML = html;
+            }
+
+            try {
+                const res = await fetch(`${BASE}/this-week-observations?sta_cde=${encodeURIComponent(sta_cde)}`);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                thisWeekObs = await res.json();
+                renderThisWeekChart();
+            } catch (e) {
+                document.getElementById("thisWeekChartArea").innerHTML =
+                    `<div class="alert alert-error">이번 주 데이터 로드 실패: ${escHtml(e.message)}</div>`;
             }
         }
 
