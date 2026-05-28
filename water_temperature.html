@@ -201,6 +201,40 @@
 
         footer { font-size: 12px; color: #aaa; }
 
+        /* 주차 네비게이션 */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .card-header .card-title { margin-bottom: 0; }
+
+        .week-nav { display: flex; gap: 6px; }
+
+        .nav-btn {
+            width: 32px;
+            height: 32px;
+            border: 2px solid #d1e3f8;
+            border-radius: 8px;
+            background: #f0f7ff;
+            font-size: 16px;
+            cursor: pointer;
+            color: #1a3c5e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all .15s;
+        }
+
+        .nav-btn:hover:not(:disabled) { border-color: #2563eb; background: #dbeafe; }
+
+        .nav-btn:disabled {
+            opacity: .35;
+            cursor: not-allowed;
+        }
+
         @media (max-width: 500px) {
             .temp-value { font-size: 56px; }
         }
@@ -253,7 +287,13 @@
 
         <!-- 이번 주 수온 추이 -->
         <div class="card">
-            <div class="card-title">이번 주 수온 추이 (월~일 일평균)</div>
+            <div class="card-header">
+                <div class="card-title" id="thisWeekTitle">이번 주 수온 추이 (월~일 일평균)</div>
+                <div class="week-nav">
+                    <button id="btnPrevWeek" class="nav-btn" onclick="changeWeek(1)" title="이전 주">&#8592;</button>
+                    <button id="btnNextWeek" class="nav-btn" onclick="changeWeek(-1)" title="다음 주" disabled>&#8594;</button>
+                </div>
+            </div>
             <div id="thisWeekChartArea">
                 <p class="empty">관측소를 선택하면 차트가 표시됩니다.</p>
             </div>
@@ -273,6 +313,7 @@
         let todayObs = [];
         let weeklyObs = [];
         let thisWeekObs = [];
+        let weeksAgo = 0;
 
         // ── 초기화: 관측소 목록 로드 ──────────────────────────────
         async function init() {
@@ -328,7 +369,9 @@
         // ── 관측소 선택 → 데이터 로드 ─────────────────────────────
         async function selectStation(sta_cde) {
             selectedStation = allStations.find(s => s.sta_cde === sta_cde);
+            weeksAgo = 0;
             renderStations();
+            updateWeekNavUI();
 
             document.getElementById("currentArea").innerHTML = skeletons(2);
             document.getElementById("chartArea").innerHTML = skeletons(1);
@@ -356,14 +399,44 @@
                 document.getElementById("weeklyChartArea").innerHTML = html;
             }
 
+            loadThisWeekChart();
+        }
+
+        // ── 주차 네비게이션 ────────────────────────────────────────
+        function changeWeek(delta) {
+            const next = weeksAgo + delta;
+            if (next < 0 || !selectedStation) return;
+            weeksAgo = next;
+            updateWeekNavUI();
+            loadThisWeekChart();
+        }
+
+        function updateWeekNavUI() {
+            const nextBtn = document.getElementById('btnNextWeek');
+            if (nextBtn) nextBtn.disabled = weeksAgo === 0;
+
+            const title = document.getElementById('thisWeekTitle');
+            if (title) {
+                const label = weeksAgo === 0 ? '이번 주'
+                    : weeksAgo === 1 ? '지난 주'
+                    : `${weeksAgo}주 전`;
+                title.textContent = `${label} 수온 추이 (월~일 일평균)`;
+            }
+        }
+
+        async function loadThisWeekChart() {
+            if (!selectedStation) return;
+            document.getElementById("thisWeekChartArea").innerHTML = skeletons(1);
             try {
-                const res = await fetch(`${BASE}/this-week-observations?sta_cde=${encodeURIComponent(sta_cde)}`);
+                const sta_cde = selectedStation.sta_cde;
+                const url = `${BASE}/this-week-observations?sta_cde=${encodeURIComponent(sta_cde)}&weeks_ago=${weeksAgo}`;
+                const res = await fetch(url);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 thisWeekObs = await res.json();
                 renderThisWeekChart();
             } catch (e) {
                 document.getElementById("thisWeekChartArea").innerHTML =
-                    `<div class="alert alert-error">이번 주 데이터 로드 실패: ${escHtml(e.message)}</div>`;
+                    `<div class="alert alert-error">데이터 로드 실패: ${escHtml(e.message)}</div>`;
             }
         }
 
@@ -686,6 +759,7 @@
             `).join('');
 
             const weekRange = `${thisWeekObs[0].date} ~ ${thisWeekObs[6].date}`;
+            const weekLabel = weeksAgo === 0 ? '이번 주' : weeksAgo === 1 ? '지난 주' : `${weeksAgo}주 전`;
 
             document.getElementById("thisWeekChartArea").innerHTML = `
                 <div class="chart-legend">${legend}</div>
@@ -696,7 +770,7 @@
                         </g>
                     </svg>
                 </div>
-                <p style="font-size:12px;color:#aaa;margin-top:6px;">${weekRange} · 이번 주(월~일) 수심별 일평균 수온</p>
+                <p style="font-size:12px;color:#aaa;margin-top:6px;">${weekRange} · ${weekLabel}(월~일) 수심별 일평균 수온</p>
             `;
         }
 

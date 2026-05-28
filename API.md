@@ -30,6 +30,7 @@
 | GET | `/observations` | 수온 관측 데이터 (전체 또는 관측소별) |
 | GET | `/today-observations` | 특정 관측소의 당일 관측 데이터 (수심별, 시간 순) |
 | GET | `/weekly-observations` | 특정 관측소의 최근 7일 수심별 일평균 수온 |
+| GET | `/this-week-observations` | 특정 관측소의 지정한 주(월~일) 수심별 일평균 수온 (`weeks_ago`로 이전 주 조회 가능) |
 
 ---
 
@@ -252,6 +253,70 @@ GET /weekly-observations?sta_cde=bgna3
 ```
 
 **정렬**: `date` 오름차순 (과거 → 최근)
+
+---
+
+## GET `/this-week-observations`
+
+특정 관측소의 **지정한 주 월요일~일요일(KST 기준)** 수심별 일평균 수온을 반환합니다.
+
+`weeks_ago` 파라미터로 이번 주(0) 또는 N주 전 데이터를 조회할 수 있습니다.
+
+항상 7개 항목(월~일)을 반환하며, 데이터가 없는 날은 `lay1/lay2/lay3` 모두 `null`입니다.
+
+### Query Parameters
+
+| 파라미터 | 필수 | 타입 | 설명 |
+|---------|------|------|------|
+| `sta_cde` | **필수** | `string` | 관측소 코드 |
+| `weeks_ago` | 선택 | `integer` | 몇 주 전 데이터 조회 (기본값: `0` = 이번 주, `1` = 지난주, ...) |
+
+### 예시
+
+```
+GET /this-week-observations?sta_cde=bgna3
+GET /this-week-observations?sta_cde=bgna3&weeks_ago=1
+GET /this-week-observations?sta_cde=bgna3&weeks_ago=2
+```
+
+### Response `200 OK`
+
+```json
+[
+  { "date": "2026-05-25", "lay1": 14.49, "lay2": 9.00, "lay3": 5.84 },
+  { "date": "2026-05-26", "lay1": 14.73, "lay2": 7.53, "lay3": 4.57 },
+  { "date": "2026-05-27", "lay1": null,  "lay2": null,  "lay3": null  },
+  { "date": "2026-05-28", "lay1": null,  "lay2": null,  "lay3": null  },
+  { "date": "2026-05-29", "lay1": null,  "lay2": null,  "lay3": null  },
+  { "date": "2026-05-30", "lay1": null,  "lay2": null,  "lay3": null  },
+  { "date": "2026-05-31", "lay1": null,  "lay2": null,  "lay3": null  }
+]
+```
+
+### 필드 설명
+
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `date` | `string` | 관측 날짜 (`YYYY-MM-DD`, KST 기준) |
+| `lay1` | `number \| null` | 표층 일평균 수온 (°C), 데이터 없으면 `null` |
+| `lay2` | `number \| null` | 중층 일평균 수온 (°C), 데이터 없으면 `null` |
+| `lay3` | `number \| null` | 저층 일평균 수온 (°C), 데이터 없으면 `null` |
+
+### Response `400 Bad Request`
+
+`sta_cde` 파라미터 누락 시:
+
+```json
+{ "error": "sta_cde is required" }
+```
+
+`weeks_ago`가 음수이거나 숫자가 아닐 때:
+
+```json
+{ "error": "weeks_ago must be a non-negative integer" }
+```
+
+**정렬**: 월요일 → 일요일 (항상 7개 항목)
 
 ---
 
