@@ -251,6 +251,14 @@
             </div>
         </div>
 
+        <!-- 이번 주 수온 추이 -->
+        <div class="card">
+            <div class="card-title">이번 주 수온 추이 (월~일 일평균)</div>
+            <div id="thisWeekChartArea">
+                <p class="empty">관측소를 선택하면 차트가 표시됩니다.</p>
+            </div>
+        </div>
+
         <footer>출처: WhatsTheTemper Server — 30분 간격 수집 (매시 :10, :40)</footer>
     </div>
 
@@ -264,6 +272,7 @@
         let selectedStation = null;
         let todayObs = [];
         let weeklyObs = [];
+        let thisWeekObs = [];
 
         // ── 초기화: 관측소 목록 로드 ──────────────────────────────
         async function init() {
@@ -324,26 +333,32 @@
             document.getElementById("currentArea").innerHTML = skeletons(2);
             document.getElementById("chartArea").innerHTML = skeletons(1);
             document.getElementById("weeklyChartArea").innerHTML = skeletons(1);
+            document.getElementById("thisWeekChartArea").innerHTML = skeletons(1);
 
             try {
-                const [todayRes, weeklyRes] = await Promise.all([
+                const [todayRes, weeklyRes, thisWeekRes] = await Promise.all([
                     fetch(`${BASE}/today-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
                     fetch(`${BASE}/weekly-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
+                    fetch(`${BASE}/this-week-observations?sta_cde=${encodeURIComponent(sta_cde)}`),
                 ]);
                 if (!todayRes.ok) throw new Error(`HTTP ${todayRes.status}`);
                 if (!weeklyRes.ok) throw new Error(`HTTP ${weeklyRes.status}`);
+                if (!thisWeekRes.ok) throw new Error(`HTTP ${thisWeekRes.status}`);
 
-                todayObs  = await todayRes.json();
-                weeklyObs = await weeklyRes.json();
+                todayObs    = await todayRes.json();
+                weeklyObs   = await weeklyRes.json();
+                thisWeekObs = await thisWeekRes.json();
 
                 renderCurrentData();
                 renderChart();
                 renderWeeklyChart();
+                renderThisWeekChart();
             } catch (e) {
                 const html = `<div class="alert alert-error">데이터 로드 실패: ${escHtml(e.message)}</div>`;
                 document.getElementById("currentArea").innerHTML = html;
                 document.getElementById("chartArea").innerHTML = html;
                 document.getElementById("weeklyChartArea").innerHTML = html;
+                document.getElementById("thisWeekChartArea").innerHTML = html;
             }
         }
 
@@ -567,6 +582,116 @@
                     </svg>
                 </div>
                 <p style="font-size:12px;color:#aaa;margin-top:6px;">${dateRange} · 수심별 일평균 수온</p>
+            `;
+        }
+
+        // ── 이번 주 수온 추이 차트 (월~일 고정, 수심별) ──────────────
+        function renderThisWeekChart() {
+            if (!thisWeekObs || thisWeekObs.length === 0) {
+                document.getElementById("thisWeekChartArea").innerHTML =
+                    '<p class="empty">이번 주 데이터가 없습니다.</p>';
+                return;
+            }
+
+            const allTemps = thisWeekObs.flatMap(d => [d.lay1, d.lay2, d.lay3].filter(v => v != null));
+            if (allTemps.length === 0) {
+                document.getElementById("thisWeekChartArea").innerHTML =
+                    '<p class="empty">이번 주 아직 데이터가 없습니다.</p>';
+                return;
+            }
+
+            const now = new Date();
+            const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+            const DAY_KOR = ['일', '월', '화', '수', '목', '금', '토'];
+
+            const minT = Math.floor(Math.min(...allTemps) - 0.5);
+            const maxT = Math.ceil(Math.max(...allTemps) + 0.5);
+            const tRange = maxT - minT || 1;
+
+            const W = 760, H = 200;
+            const PAD = { top: 16, right: 16, bottom: 42, left: 38 };
+            const cW = W - PAD.left - PAD.right;
+            const cH = H - PAD.top - PAD.bottom;
+
+            const xOf = i => (i / 6) * cW;
+            const yOf = t => cH - ((t - minT) / tRange) * cH;
+
+            let grid = '';
+            thisWeekObs.forEach((d, i) => {
+                const x = xOf(i);
+                const date = new Date(d.date + 'T12:00:00');
+                const dayLabel = DAY_KOR[date.getDay()];
+                const datePart = d.date.slice(5);
+                const isToday = d.date === todayStr;
+                const lineColor = isToday ? '#bfdbfe' : '#e5e7eb';
+                const textColor = isToday ? '#2563eb' : '#999';
+                const fontWeight = isToday ? '600' : '400';
+                grid += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${cH}" stroke="${lineColor}" stroke-width="${isToday ? 2 : 1}"/>`;
+                grid += `<text x="${x.toFixed(1)}" y="${cH + 16}" text-anchor="middle" font-size="12" fill="${textColor}" font-weight="${fontWeight}">${dayLabel}</text>`;
+                grid += `<text x="${x.toFixed(1)}" y="${cH + 30}" text-anchor="middle" font-size="10" fill="${isToday ? '#60a5fa' : '#bbb'}">${datePart}</text>`;
+            });
+
+            let yAxis = '';
+            for (let i = 0; i <= 4; i++) {
+                const t = minT + (tRange * i / 4);
+                const y = yOf(t);
+                yAxis += `<line x1="0" y1="${y.toFixed(1)}" x2="${cW}" y2="${y.toFixed(1)}" stroke="#e5e7eb" stroke-width="1"/>`;
+                yAxis += `<text x="-6" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="10" fill="#999">${t.toFixed(1)}</text>`;
+            }
+
+            let paths = '', dots = '';
+            [1, 2, 3].forEach(layNum => {
+                const key = `lay${layNum}`;
+                const color = LAYER_COLORS[layNum];
+
+                let pathD = '';
+                thisWeekObs.forEach((d, i) => {
+                    if (d[key] == null) return;
+                    const x = xOf(i).toFixed(1);
+                    const y = yOf(d[key]).toFixed(1);
+                    const prevHasData = i > 0 && thisWeekObs[i - 1][key] != null;
+                    pathD += `${prevHasData ? 'L' : 'M'}${x},${y} `;
+                });
+
+                if (!pathD) return;
+
+                paths += `<path d="${pathD.trim()}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+                thisWeekObs.forEach((d, i) => {
+                    if (d[key] == null) return;
+                    const x = xOf(i).toFixed(1);
+                    const y = yOf(d[key]).toFixed(1);
+                    const isToday = d.date === todayStr;
+                    if (isToday) {
+                        dots += `<circle cx="${x}" cy="${y}" r="5" fill="${color}" stroke="white" stroke-width="2"/>`;
+                    } else {
+                        dots += `<circle cx="${x}" cy="${y}" r="3" fill="${color}"/>`;
+                    }
+                });
+            });
+
+            const activeLayers = [1, 2, 3].filter(l =>
+                thisWeekObs.some(d => d[`lay${l}`] != null)
+            );
+            const legend = activeLayers.map(l => `
+                <span class="legend-item">
+                    <span class="legend-line" style="background:${LAYER_COLORS[l]};"></span>
+                    ${LAYER_LABEL[l]}
+                </span>
+            `).join('');
+
+            const weekRange = `${thisWeekObs[0].date} ~ ${thisWeekObs[6].date}`;
+
+            document.getElementById("thisWeekChartArea").innerHTML = `
+                <div class="chart-legend">${legend}</div>
+                <div class="chart-wrap">
+                    <svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:500px;display:block;">
+                        <g transform="translate(${PAD.left},${PAD.top})">
+                            ${grid}${yAxis}${paths}${dots}
+                        </g>
+                    </svg>
+                </div>
+                <p style="font-size:12px;color:#aaa;margin-top:6px;">${weekRange} · 이번 주(월~일) 수심별 일평균 수온</p>
             `;
         }
 
