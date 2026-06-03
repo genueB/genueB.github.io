@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsTheTemper — Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,800;1,9..144,700;1,9..144,900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #f0ede8;
+            --bg-card: #ffffff;
+            --bg-header: rgba(248, 246, 242, 0.92);
+            --border: #e2ddd6;
+            --border-strong: #c9c2b8;
+            --accent: #2563eb;
+            --accent-dim: rgba(37, 99, 235, 0.08);
+            --accent-surface: #eff6ff;
+            --green: #059669;
+            --red: #dc2626;
+            --text: #1c1917;
+            --text-mid: #44403c;
+            --text-dim: #78716c;
+            --text-light: #a8a29e;
+            --text-bright: #1c1917;
+            --blue: #2563eb;
+            --radius: 14px;
+            --shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 14px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+            --font-d: 'DM Sans', sans-serif;
+            --font-serif: 'Fraunces', serif;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            width: 100%;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--font-d);
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── LOGIN ─── */
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            z-index: 100;
+        }
+
+        .login-panel-left {
+            width: 44%;
+            background: #18181b;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 64px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-panel-left::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(37,99,235,0.28) 0%, transparent 65%);
+            top: -150px; left: -100px;
+        }
+
+        .login-panel-left::after {
+            content: '';
+            position: absolute;
+            width: 350px;
+            height: 350px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(5,150,105,0.18) 0%, transparent 65%);
+            bottom: -80px; right: -60px;
+        }
+
+        .login-deco {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .login-deco-app {
+            font-size: 12px;
+            font-weight: 500;
+            color: #52525b;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        .login-deco-title {
+            font-family: var(--font-serif);
+            font-size: 54px;
+            font-weight: 900;
+            font-style: italic;
+            color: #fff;
+            line-height: 1.0;
+            margin-bottom: 18px;
+        }
+
+        .login-deco-title em {
+            color: #60a5fa;
+            font-style: normal;
+        }
+
+        .login-deco-rule {
+            width: 40px;
+            height: 2px;
+            background: #3f3f46;
+            margin: 0 auto 18px;
+        }
+
+        .login-deco-desc {
+            font-size: 14px;
+            color: #52525b;
+            line-height: 1.6;
+            max-width: 260px;
+            margin: 0 auto;
+        }
+
+        .login-panel-right {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg);
+            padding: 60px 48px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 340px;
+            animation: fadeUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-eyebrow {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .login-title {
+            font-family: var(--font-serif);
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--text);
+            line-height: 1.2;
+            margin-bottom: 32px;
+        }
+
+        .login-title span { color: var(--accent); }
+
+        .login-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-mid);
+            margin-bottom: 7px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #fff;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            color: var(--text);
+            font-family: var(--font-d);
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.18s, box-shadow 0.18s;
+            margin-bottom: 14px;
+        }
+
+        .login-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--accent);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-family: var(--font-d);
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.28);
+        }
+
+        .login-btn:hover {
+            background: #1d4ed8;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.35);
+        }
+
+        .login-btn:active { transform: scale(0.985); }
+        .login-btn:disabled { opacity: 0.55; cursor: default; box-shadow: none; }
+
+        .login-error {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            color: var(--red);
+            font-size: 13px;
+            display: none;
+        }
+
+        .login-error.show { display: block; }
+
+        /* ─── DASHBOARD ─── */
+        #dashboard {
+            display: none;
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        #dashboard.visible { display: block; }
+
+        /* Header */
+        .dash-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            height: 58px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-header);
+            backdrop-filter: blur(12px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .dash-header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dash-brand {
+            font-family: var(--font-serif);
+            font-size: 17px;
+            font-weight: 800;
+            font-style: italic;
+            color: var(--text);
+        }
+
+        .dash-brand span { color: var(--accent); }
+
+        .dash-badge {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--accent);
+            background: var(--accent-surface);
+            border: 1px solid rgba(37,99,235,0.2);
+            padding: 2px 7px;
+            border-radius: 4px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .dash-actions { display: flex; gap: 8px; }
+
+        .btn-outline {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: var(--font-d);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: transparent;
+        }
+
+        .btn-outline.refresh {
+            border: 1px solid var(--border-strong);
+            color: var(--text-mid);
+        }
+
+        .btn-outline.refresh:hover {
+            background: var(--accent-surface);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-outline.logout {
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+        }
+
+        .btn-outline.logout:hover {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: var(--red);
+        }
+
+        /* Main */
+        .dash-main {
+            padding: 32px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Section header */
+        .sec-hdr {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .sec-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-mid);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sec-title::before {
+            content: '';
+            display: block;
+            width: 3px;
+            height: 14px;
+            background: var(--accent);
+            border-radius: 2px;
+        }
+
+        /* Days selector */
+        .days-sel { display: flex; gap: 3px; }
+
+        .days-btn {
+            padding: 5px 12px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-family: var(--font-d);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .days-btn.active,
+        .days-btn:hover {
+            background: var(--accent-surface);
+            border-color: var(--accent);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Limit select */
+        .limit-sel {
+            padding: 5px 10px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            color: var(--text-mid);
+            font-family: var(--font-d);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .limit-sel:focus { border-color: var(--accent); }
+
+        /* ─── OVERVIEW ─── */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 22px 22px 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            opacity: 0;
+            animation: cardIn 0.4s ease forwards;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+
+        .stat-card:nth-child(1) { animation-delay: 0.04s; }
+        .stat-card:nth-child(2) { animation-delay: 0.09s; }
+        .stat-card:nth-child(3) { animation-delay: 0.14s; }
+        .stat-card:nth-child(4) { animation-delay: 0.19s; }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--border);
+            transition: background 0.2s;
+        }
+
+        .stat-card:hover::before { background: var(--accent); }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+        }
+
+        .stat-val {
+            font-family: var(--font-serif);
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+
+        .stat-val.hi { color: var(--accent); }
+
+        .stat-ico {
+            position: absolute;
+            right: 18px;
+            top: 20px;
+            font-size: 20px;
+            opacity: 0.15;
+        }
+
+        /* ─── CHART CARD ─── */
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-row .chart-card { margin-bottom: 0; }
+
+        .chart-wrap {
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .chart-wrap.tall  { height: 280px; }
+        .chart-wrap.short { height: 220px; }
+
+        /* ─── TABLE CARD ─── */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin-bottom: 24px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .tbl-wrap { overflow-x: auto; margin-top: 16px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+        thead th {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-light);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 8px 14px;
+            border-bottom: 1.5px solid var(--border);
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s;
+        }
+
+        thead th:hover { color: var(--accent); }
+        thead th.sorted { color: var(--accent); }
+
+        tbody tr {
+            border-bottom: 1px solid #f5f3ef;
+            transition: background 0.1s;
+        }
+
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #fafaf8; }
+
+        tbody td {
+            padding: 12px 14px;
+            color: var(--text-mid);
+            vertical-align: middle;
+        }
+
+        .td-m   { font-size: 13px; }
+        .td-hi  { font-weight: 600; color: var(--text); }
+        .td-ac  { font-weight: 700; color: var(--accent); }
+        .td-dim { font-size: 12px; color: var(--text-dim); }
+
+        .sea-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .mini-bar {
+            height: 3px;
+            background: #f0ede8;
+            border-radius: 2px;
+            margin-top: 5px;
+        }
+
+        .mini-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+
+        /* Loading */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 44px;
+            color: var(--text-dim);
+            font-size: 13px;
+            gap: 10px;
+        }
+
+        .loading::before {
+            content: '';
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.65s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-panel-left { display: none; }
+        }
+
+        @media (max-width: 960px) {
+            .overview-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-row { grid-template-columns: 1fr; }
+            .dash-main { padding: 24px 20px; }
+            .dash-header { padding: 0 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .stat-val { font-size: 32px; }
+            .login-panel-right { padding: 40px 28px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ─── LOGIN ─── -->
+<div id="login-screen">
+    <div class="login-panel-left">
+        <div class="login-deco">
+            <div class="login-deco-app">WhatsTheTemper</div>
+            <div class="login-deco-title">수온<br><em>Analytics</em></div>
+            <div class="login-deco-rule"></div>
+            <div class="login-deco-desc">앱 사용 현황을 한눈에 확인하는 관리자 대시보드</div>
+        </div>
+    </div>
+    <div class="login-panel-right">
+        <div class="login-box">
+            <div class="login-eyebrow">관리자 접속</div>
+            <h1 class="login-title">안녕하세요,<br><span>로그인해주세요</span></h1>
+            <label class="login-label" for="login-id">아이디</label>
+            <input
+                type="text"
+                id="login-id"
+                class="login-input"
+                placeholder="admin"
+                autocomplete="username"
+            >
+            <label class="login-label" for="login-pw">비밀번호</label>
+            <input
+                type="password"
+                id="login-pw"
+                class="login-input"
+                placeholder="••••••••••••••••"
+                autocomplete="current-password"
+            >
+            <button class="login-btn" id="login-btn" onclick="handleLogin()">접속하기</button>
+            <div class="login-error" id="login-error">인증 실패 — API 키를 확인해주세요</div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── DASHBOARD ─── -->
+<div id="dashboard">
+
+    <header class="dash-header">
+        <div class="dash-header-left">
+            <div class="dash-brand">WhatsThe<span>Temper</span></div>
+            <span class="dash-badge">ADMIN</span>
+        </div>
+        <div class="dash-actions">
+            <button class="btn-outline refresh" onclick="loadAllData()">새로고침</button>
+            <button class="btn-outline logout" onclick="handleLogout()">로그아웃</button>
+        </div>
+    </header>
+
+    <main class="dash-main">
+
+        <!-- OVERVIEW -->
+        <div class="sec-hdr"><div class="sec-title">전체 요약</div></div>
+        <div class="overview-grid" id="overview-grid">
+            <div class="loading" style="grid-column:1/-1">로딩 중...</div>
+        </div>
+
+        <!-- DAU -->
+        <div class="chart-card">
+            <div class="sec-hdr">
+                <div class="sec-title">일별 활성 유저 (DAU)</div>
+                <div class="days-sel" id="dau-sel">
+                    <button class="days-btn" onclick="setDays('dau', 7)">7일</button>
+                    <button class="days-btn active" onclick="setDays('dau', 30)">30일</button>
+                    <button class="days-btn" onclick="setDays('dau', 90)">90일</button>
+                </div>
+            </div>
+            <div class="chart-wrap tall"><canvas id="dau-chart"></canvas></div>
+        </div>
+
+        <!-- EVENTS + TABS -->
+        <div class="chart-row">
+            <div class="chart-card">
+                <div class="sec-hdr">
+                    <div class="sec-title">이벤트 분포</div>
+                    <div class="days-sel" id="events-sel">
+                        <button class="days-btn active" onclick="setDays('events', 7)">7일</button>
+                        <button class="days-btn" onclick="setDays('events', 30)">30일</button>
+                        <button class="days-btn" onclick="setDays('events', 90)">90일</button>
+                    </div>
+                </div>
+                <div class="chart-wrap short"><canvas id="events-chart"></canvas></div>
+            </div>
+            <div class="chart-card">
+                <div class="sec-hdr">
+                    <div class="sec-title">탭별 진입</div>
+                    <div class="days-sel" id="tabs-sel">
+                        <button class="days-btn active" onclick="setDays('tabs', 7)">7일</button>
+                        <button class="days-btn" onclick="setDays('tabs', 30)">30일</button>
+                        <button class="days-btn" onclick="setDays('tabs', 90)">90일</button>
+                    </div>
+                </div>
+                <div class="chart-wrap short"><canvas id="tabs-chart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- STATIONS -->
+        <div class="table-card">
+            <div class="sec-hdr">
+                <div class="sec-title">인기 관측소</div>
+                <select class="limit-sel" id="stations-limit" onchange="loadStations()">
+                    <option value="10">TOP 10</option>
+                    <option value="20">TOP 20</option>
+                    <option value="50">TOP 50</option>
+                </select>
+            </div>
+            <div class="tbl-wrap">
+                <div class="loading" id="stations-loading">로딩 중...</div>
+                <table id="stations-table" style="display:none">
+                    <thead>
+                        <tr>
+                            <th class="sorted" onclick="sortTable('stations','view_count')">조회수 ↓</th>
+                            <th onclick="sortTable('stations','station_name')">관측소 ↕</th>
+                            <th onclick="sortTable('stations','sea_name')">권역 ↕</th>
+                            <th onclick="sortTable('stations','favorite_add')">즐겨찾기 추가 ↕</th>
+                            <th onclick="sortTable('stations','favorite_remove')">즐겨찾기 제거 ↕</th>
+                            <th onclick="sortTable('stations','favorite_net')">순 즐겨찾기 ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stations-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SEARCHES -->
+        <div class="table-card">
+            <div class="sec-hdr">
+                <div class="sec-title">인기 검색어</div>
+                <select class="limit-sel" id="searches-limit" onchange="loadSearches()">
+                    <option value="20">TOP 20</option>
+                    <option value="50">TOP 50</option>
+                    <option value="100">TOP 100</option>
+                </select>
+            </div>
+            <div class="tbl-wrap">
+                <div class="loading" id="searches-loading">로딩 중...</div>
+                <table id="searches-table" style="display:none">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>검색어</th>
+                            <th class="sorted" onclick="sortTable('searches','count')">검색 횟수 ↓</th>
+                            <th onclick="sortTable('searches','avg_result_count')">평균 결과 수 ↕</th>
+                        </tr>
+                    </thead>
+                    <tbody id="searches-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+const BASE = 'https://whatsthetemperserver.onrender.com';
+let key = '';
+
+let charts = { dau: null, events: null, tabs: null };
+let days = { dau: 30, events: 7, tabs: 7 };
+
+let stationsData = [];
+let stationsSort = { key: 'view_count', desc: true };
+
+let searchesData = [];
+let searchesSort = { key: 'count', desc: true };
+
+Chart.defaults.color = '#78716c';
+Chart.defaults.borderColor = '#e2ddd6';
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 12;
+
+// ─── AUTH ───
+async function handleLogin() {
+    const id = document.getElementById('login-id').value.trim();
+    const pw = document.getElementById('login-pw').value.trim();
+    if (!id || !pw) return;
+    const btn = document.getElementById('login-btn');
+    btn.textContent = '확인 중...';
+    btn.disabled = true;
+    try {
+        const res = await fetch(`${BASE}/admin/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id, password: pw }),
+        });
+        if (res.status === 401) { showError('인증 실패 — 아이디 또는 비밀번호를 확인해주세요'); return; }
+        if (res.status === 400) { showError('아이디와 비밀번호를 모두 입력해주세요'); return; }
+        if (!res.ok) { showError('서버 오류가 발생했습니다'); return; }
+        const { token } = await res.json();
+        key = token;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('dashboard').classList.add('visible');
+        loadAllData();
+    } catch {
+        showError('서버에 연결할 수 없습니다');
+    } finally {
+        btn.textContent = '접속하기';
+        btn.disabled = false;
+    }
+}
+
+function showError(msg) {
+    const el = document.getElementById('login-error');
+    if (msg) el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 4000);
+}
+
+function handleLogout() {
+    key = '';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard').classList.remove('visible');
+    document.getElementById('login-id').value = '';
+    document.getElementById('login-pw').value = '';
+}
+
+['login-id', 'login-pw'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
+    });
+});
+
+// ─── API ───
+async function api(path) {
+    const res = await fetch(`${BASE}${path}`, { headers: { 'X-Admin-Key': key } });
+    if (res.status === 401) {
+        handleLogout();
+        showError('인증 실패 — 다시 로그인하세요');
+        throw new Error('unauthorized');
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+}
+
+// ─── LOAD ALL ───
+function loadAllData() {
+    loadOverview();
+    loadDAU();
+    loadEvents();
+    loadTabs();
+    loadStations();
+    loadSearches();
+}
+
+// ─── OVERVIEW ───
+async function loadOverview() {
+    const grid = document.getElementById('overview-grid');
+    grid.innerHTML = '<div class="loading" style="grid-column:1/-1">로딩 중...</div>';
+    try {
+        const d = await api('/admin/stats/overview');
+        grid.innerHTML = `
+            <div class="stat-card">
+                <div class="stat-label">전체 디바이스</div>
+                <div class="stat-val">${n(d.total_devices)}</div>
+                <div class="stat-ico">📱</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">전체 이벤트</div>
+                <div class="stat-val">${n(d.total_events)}</div>
+                <div class="stat-ico">📊</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">오늘 활성 (DAU)</div>
+                <div class="stat-val hi">${n(d.dau)}</div>
+                <div class="stat-ico">🔆</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">30일 활성 (MAU)</div>
+                <div class="stat-val hi">${n(d.mau)}</div>
+                <div class="stat-ico">📅</div>
+            </div>
+        `;
+    } catch {
+        grid.innerHTML = '<div class="loading" style="grid-column:1/-1;color:#dc2626">데이터 로드 실패</div>';
+    }
+}
+
+// ─── DAYS TOGGLE ───
+function setDays(which, val) {
+    days[which] = val;
+    const btns = document.querySelectorAll(`#${which}-sel .days-btn`);
+    btns.forEach((b, i) => b.classList.toggle('active', [7, 30, 90][i] === val));
+    if (which === 'dau')    loadDAU();
+    if (which === 'events') loadEvents();
+    if (which === 'tabs')   loadTabs();
+}
+
+// ─── DAU ───
+async function loadDAU() {
+    try {
+        const data = await api(`/admin/stats/dau?days=${days.dau}`);
+        if (charts.dau) charts.dau.destroy();
+        const ctx = document.getElementById('dau-chart').getContext('2d');
+        const g = ctx.createLinearGradient(0, 0, 0, 280);
+        g.addColorStop(0, 'rgba(37,99,235,0.14)');
+        g.addColorStop(1, 'rgba(37,99,235,0)');
+        charts.dau = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.date),
+                datasets: [{
+                    data: data.map(d => d.count),
+                    borderColor: '#2563eb',
+                    backgroundColor: g,
+                    borderWidth: 2,
+                    pointRadius: data.length > 30 ? 0 : 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#2563eb',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipStyle('#2563eb', item => `  ${item.raw}명`)
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+                    y: { beginAtZero: true, grid: { color: '#f0ede8' }, ticks: { precision: 0 } }
+                }
+            }
+        });
+    } catch {}
+}
+
+// ─── EVENTS ───
+const EVENT_KR = {
+    station_view: '관측소 상세', app_open: '앱 실행', tab_view: '탭 진입',
+    search: '검색', favorite_add: '즐겨찾기 추가', sea_filter_select: '바다 필터',
+    favorite_remove: '즐겨찾기 제거', weekly_chart_navigate: '주차 네비',
+};
+
+async function loadEvents() {
+    try {
+        const data = await api(`/admin/stats/events?days=${days.events}`);
+        if (charts.events) charts.events.destroy();
+        const ctx = document.getElementById('events-chart').getContext('2d');
+        charts.events = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => EVENT_KR[d.name] || d.name),
+                datasets: [{
+                    data: data.map(d => d.count),
+                    backgroundColor: data.map((_, i) => `rgba(37,99,235,${0.8 - i * 0.07})`),
+                    borderRadius: 4, borderSkipped: false,
+                }]
+            },
+            options: {
+                indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipStyle('#2563eb', item => `  ${n(item.raw)}회`)
+                },
+                scales: {
+                    x: { grid: { color: '#f0ede8' }, ticks: { precision: 0 } },
+                    y: { grid: { display: false } }
+                }
+            }
+        });
+    } catch {}
+}
+
+// ─── TABS ───
+const TAB_KR = { home: '홈', list: '수온 목록', map: '지도', settings: '설정' };
+
+async function loadTabs() {
+    try {
+        const data = await api(`/admin/stats/tabs?days=${days.tabs}`);
+        if (charts.tabs) charts.tabs.destroy();
+        const ctx = document.getElementById('tabs-chart').getContext('2d');
+        charts.tabs = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => TAB_KR[d.tab_name] || d.tab_name),
+                datasets: [{
+                    data: data.map(d => d.count),
+                    backgroundColor: ['#2563eb', '#059669', '#d97706', '#7c3aed'].slice(0, data.length),
+                    borderRadius: 7, borderSkipped: false,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipStyle('#1c1917', item => `  ${n(item.raw)}회`)
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, grid: { color: '#f0ede8' }, ticks: { precision: 0 } }
+                }
+            }
+        });
+    } catch {}
+}
+
+// ─── STATIONS ───
+async function loadStations() {
+    const limit = document.getElementById('stations-limit').value;
+    toggle('stations', false);
+    try {
+        stationsData = await api(`/admin/stats/stations?limit=${limit}`);
+        renderStations();
+    } catch {
+        document.getElementById('stations-loading').textContent = '데이터 로드 실패';
+    }
+}
+
+function sortTable(which, key) {
+    const s = which === 'stations' ? stationsSort : searchesSort;
+    s.desc = s.key === key ? !s.desc : true;
+    s.key = key;
+    if (which === 'stations') renderStations();
+    else renderSearches();
+}
+
+function renderStations() {
+    const s = stationsSort;
+    const sorted = [...stationsData].sort((a, b) => {
+        const av = a[s.key], bv = b[s.key];
+        return typeof av === 'string'
+            ? (s.desc ? bv.localeCompare(av) : av.localeCompare(bv))
+            : (s.desc ? bv - av : av - bv);
+    });
+    const max = sorted[0]?.view_count || 1;
+    document.getElementById('stations-tbody').innerHTML = sorted.map(r => `
+        <tr>
+            <td class="td-m">
+                <div class="td-hi">${n(r.view_count)}</div>
+                <div class="mini-bar"><div class="mini-bar-fill" style="width:${(r.view_count/max*100).toFixed(1)}%;background:#2563eb"></div></div>
+            </td>
+            <td>
+                <div style="font-weight:600;color:var(--text)">${r.station_name}</div>
+                <div class="td-dim" style="margin-top:2px">${r.station_id}</div>
+            </td>
+            <td><span class="sea-tag">${r.sea_name}</span></td>
+            <td class="td-m" style="color:#059669">+${n(r.favorite_add)}</td>
+            <td class="td-m" style="color:#dc2626">-${n(r.favorite_remove)}</td>
+            <td class="td-ac">${n(r.favorite_net)}</td>
+        </tr>
+    `).join('');
+    toggle('stations', true);
+}
+
+// ─── SEARCHES ───
+async function loadSearches() {
+    const limit = document.getElementById('searches-limit').value;
+    toggle('searches', false);
+    try {
+        searchesData = await api(`/admin/stats/searches?limit=${limit}`);
+        renderSearches();
+    } catch {
+        document.getElementById('searches-loading').textContent = '데이터 로드 실패';
+    }
+}
+
+function renderSearches() {
+    const s = searchesSort;
+    const sorted = [...searchesData].sort((a, b) =>
+        s.desc ? b[s.key] - a[s.key] : a[s.key] - b[s.key]
+    );
+    const max = sorted[0]?.count || 1;
+    document.getElementById('searches-tbody').innerHTML = sorted.map((r, i) => `
+        <tr>
+            <td class="td-dim">${String(i + 1).padStart(2, '0')}</td>
+            <td>
+                <div style="font-weight:600;color:var(--text);font-size:15px">${r.query}</div>
+                <div class="mini-bar" style="width:140px">
+                    <div class="mini-bar-fill" style="width:${(r.count/max*100).toFixed(1)}%;background:#2563eb"></div>
+                </div>
+            </td>
+            <td class="td-ac">${n(r.count)}</td>
+            <td class="td-dim">${r.avg_result_count.toFixed(1)}개</td>
+        </tr>
+    `).join('');
+    toggle('searches', true);
+}
+
+// ─── UTILS ───
+function toggle(which, show) {
+    document.getElementById(`${which}-loading`).style.display = show ? 'none' : 'flex';
+    document.getElementById(`${which}-table`).style.display = show ? 'table' : 'none';
+}
+
+function tooltipStyle(bodyColor, labelFn) {
+    return {
+        backgroundColor: '#fff',
+        borderColor: '#e2ddd6',
+        borderWidth: 1,
+        titleColor: '#78716c',
+        bodyColor,
+        bodyFont: { family: "'DM Sans', sans-serif", size: 13 },
+        callbacks: { label: labelFn }
+    };
+}
+
+function n(val) {
+    return val?.toLocaleString('ko-KR') ?? '—';
+}
+</script>
+
+</body>
+</html>
